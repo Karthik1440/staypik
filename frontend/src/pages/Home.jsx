@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../api';
-import { Search, MapPin, SlidersHorizontal, Heart, Sparkles, Locate } from 'lucide-react';
+import { Search, MapPin, SlidersHorizontal, Heart, Sparkles, Locate, ShieldCheck, Phone, ArrowRight, IndianRupee } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Home() {
@@ -275,8 +275,16 @@ export default function Home() {
         )}
       </div>
 
+      <style>{`
+        @media (min-width: 768px) {
+          .clip-curved-left {
+            clip-path: ellipse(95% 100% at 100% 50%);
+          }
+        }
+      `}</style>
+
       {/* Category Pills horizontal scroll */}
-      <div className="flex space-x-2.5 overflow-x-auto pb-1 -mx-4 px-4 hide-scrollbar">
+      <div id="properties-list-section" className="flex space-x-2.5 overflow-x-auto pb-1 -mx-4 px-4 hide-scrollbar">
         {categories.map((cat) => (
           <button
             key={cat.name}
@@ -292,71 +300,190 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Hero Banner Slider Card */}
+      {/* Hero Banner Redesigned Card */}
       {(() => {
         const fallbackBanners = [
           {
             id: 'fallback-1',
-            title: 'Find your \nperfect stay',
-            subtitle: 'Comfortable stays, \nverified places.',
-            image: '/hero_banner_interior.png',
-            button_text: 'Explore Now',
-            link_url: '/properties'
+            title: 'No Brokerage. \nDirect Owner Contact.',
+            subtitle: 'Save money and connect directly with verified property owners.',
+            image: 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=800&q=80',
+            button_text: 'Explore Properties',
+            link_url: '#listings'
           }
         ];
         const activeBanners = heroBanners.length > 0 ? heroBanners : fallbackBanners;
         const activeBanner = activeBanners[currentSlide] || activeBanners[0];
         
+        const renderTitle = (title) => {
+          if (!title) return '';
+          const highlightText1 = "Direct Owner Contact";
+          const highlightText2 = "Direct Owner Contact.";
+          if (title.includes(highlightText1)) {
+            const parts = title.split(highlightText1);
+            return (
+              <>
+                {parts[0]}
+                <span className="text-[#D97706]">{highlightText1}</span>
+                {parts[1]}
+              </>
+            );
+          } else if (title.includes(highlightText2)) {
+            const parts = title.split(highlightText2);
+            return (
+              <>
+                {parts[0]}
+                <span className="text-[#D97706]">{highlightText2}</span>
+                {parts[1]}
+              </>
+            );
+          }
+          return title;
+        };
+
+        const handleBannerClick = () => {
+          if (activeBanner.link_url && activeBanner.link_url.startsWith('http')) {
+            window.open(activeBanner.link_url, '_blank');
+          } else {
+            const element = document.getElementById('properties-list-section');
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth' });
+            }
+          }
+        };
+
+        const handleLocalityTagClick = (localityName) => {
+          setSelectedLocality(localityName);
+          setShowFilters(true);
+          const element = document.getElementById('properties-list-section');
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+          }
+        };
+
+        const getBannerImageUrl = (banner) => {
+          if (!banner || !banner.image) {
+            return 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=800&q=80';
+          }
+          if (banner.image.startsWith('http://') || banner.image.startsWith('https://')) {
+            return banner.image;
+          }
+          const base = api.defaults.baseURL ? api.defaults.baseURL.replace('/api', '') : '';
+          return `${base}/${banner.image.replace(/^\//, '')}`;
+        };
+        
         return (
-          <div className="space-y-3">
-            <div className="bg-gradient-to-br from-[#FCF9F4] to-[#F5ECE1] rounded-[32px] p-6 border border-[#EFE5D9] shadow-sm flex items-center justify-between relative overflow-hidden h-44 transition duration-500">
-              <div className="z-10 max-w-[55%] text-left space-y-2.5">
-                <h2 className="text-xl font-extrabold text-[#2E180E] leading-tight whitespace-pre-line">
-                  {activeBanner.title}
-                </h2>
-                {activeBanner.subtitle && (
-                  <p className="text-[11px] font-semibold text-slate-500 leading-normal whitespace-pre-line">
-                    {activeBanner.subtitle}
-                  </p>
-                )}
-                <button 
-                  onClick={() => {
-                    if (activeBanner.link_url && activeBanner.link_url.startsWith('http')) {
-                      window.open(activeBanner.link_url, '_blank');
-                    } else if (activeBanner.link_url === '/properties') {
-                      setSelectedCategory('PG');
-                    } else if (activeBanner.link_url) {
-                      navigate(activeBanner.link_url);
-                    } else {
-                      setSelectedCategory('PG');
-                    }
-                  }}
-                  className="mt-2.5 px-4 py-2.5 bg-[#2E180E] hover:bg-[#1C0F09] text-white text-xs font-black rounded-full flex items-center space-x-1.5 shadow-md shadow-amber-950/20 transition duration-150 active:scale-95"
-                >
-                  <span>{activeBanner.button_text || 'Explore Now'}</span>
-                  <span className="text-sm">→</span>
-                </button>
+          <div className="space-y-4">
+            <div className="bg-gradient-to-r from-[#FFFDF9] via-[#FFF9EE] to-[#FFF3DE] rounded-[32px] border border-[#EFE5D9] shadow-sm relative overflow-hidden flex flex-col md:flex-row items-stretch min-h-[380px] md:h-[420px] transition duration-500 text-left">
+              {/* Left Content Column */}
+              <div className="flex-1 p-6 md:p-10 flex flex-col justify-between space-y-6 z-10 max-w-full md:max-w-[55%]">
+                {/* Top Badge */}
+                <div className="flex">
+                  <span className="inline-flex items-center space-x-1.5 px-3 py-1 bg-[#FEF3C7] text-[#D97706] rounded-full text-xs font-black uppercase tracking-wider border border-[#FDE68A]">
+                    <ShieldCheck size={14} className="stroke-[2.5px]" />
+                    <span>Verified Properties</span>
+                  </span>
+                </div>
+
+                {/* Main Headings */}
+                <div className="space-y-3.5">
+                  <h2 className="text-2xl md:text-4.5xl font-black text-slate-800 leading-[1.15] whitespace-pre-line tracking-tight">
+                    {renderTitle(activeBanner.title)}
+                  </h2>
+                  {activeBanner.subtitle && (
+                    <p className="text-sm md:text-base font-semibold text-slate-500 leading-relaxed max-w-md">
+                      {activeBanner.subtitle}
+                    </p>
+                  )}
+                </div>
+
+                {/* Features Row */}
+                <div className="grid grid-cols-2 gap-y-4 gap-x-3 sm:flex sm:space-x-4 pt-2">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 rounded-full bg-[#FEF3C7] text-[#D97706] flex items-center justify-center flex-shrink-0">
+                      <IndianRupee size={14} className="stroke-[2.5px]" />
+                    </div>
+                    <span className="text-[11px] md:text-xs font-extrabold text-slate-600 leading-tight">No Hidden Charges</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 rounded-full bg-[#FEF3C7] text-[#D97706] flex items-center justify-center flex-shrink-0">
+                      <ShieldCheck size={14} className="stroke-[2.5px]" />
+                    </div>
+                    <span className="text-[11px] md:text-xs font-extrabold text-slate-600 leading-tight">Verified Properties</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 rounded-full bg-[#FEF3C7] text-[#D97706] flex items-center justify-center flex-shrink-0">
+                      <Phone size={14} className="stroke-[2.5px]" />
+                    </div>
+                    <span className="text-[11px] md:text-xs font-extrabold text-slate-600 leading-tight">Direct Owner</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 rounded-full bg-[#FEF3C7] text-[#D97706] flex items-center justify-center flex-shrink-0">
+                      <Heart size={14} className="stroke-[2.5px]" />
+                    </div>
+                    <span className="text-[11px] md:text-xs font-extrabold text-slate-600 leading-tight">Trusted by Thousands</span>
+                  </div>
+                </div>
+
+                {/* Button Action */}
+                <div className="pt-2">
+                  <button 
+                    onClick={handleBannerClick}
+                    className="px-6 py-3.5 bg-[#D97706] hover:bg-[#B45309] text-white text-sm font-black rounded-2xl flex items-center space-x-2 shadow-lg shadow-amber-700/20 transition duration-150 active:scale-95"
+                  >
+                    <span>{activeBanner.button_text || 'Explore Properties'}</span>
+                    <ArrowRight size={16} className="stroke-[2.5px]" />
+                  </button>
+                </div>
               </div>
-              
-              {/* Right side decorative image */}
-              <div className="absolute right-0 bottom-0 top-0 w-[45%] flex items-end">
+
+              {/* Right Image Column (with curved overlay clip) */}
+              <div className="relative w-full md:w-[45%] h-64 md:h-auto flex-shrink-0 overflow-hidden select-none">
                 <img 
-                  src={activeBanner.image || '/hero_banner_interior.png'} 
+                  src={getBannerImageUrl(activeBanner)} 
                   alt={activeBanner.title} 
-                  className="w-full h-[90%] object-cover object-left-bottom rounded-tl-[32px] border-l border-t border-[#EFE5D9]"
+                  className="w-full h-full object-cover transition duration-500 clip-curved-left"
                 />
+
+                {/* Floating Tags Card */}
+                <div className="absolute bottom-6 right-6 bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-slate-100 max-w-[280px] animate-fadeIn">
+                  <div className="flex items-center space-x-1.5 text-slate-800 font-extrabold text-xs mb-2">
+                    <MapPin size={14} className="text-[#D97706]" />
+                    <span>Popular in Bangalore</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {['HSR Layout', 'Koramangala', 'BTM Layout', 'Whitefield', 'Electronic City'].map((loc) => (
+                      <button
+                        key={loc}
+                        onClick={() => handleLocalityTagClick(loc)}
+                        className="px-2.5 py-1 bg-slate-50 hover:bg-[#FEF3C7] text-slate-600 hover:text-[#D97706] text-[10px] font-bold rounded-lg border border-slate-100 transition"
+                      >
+                        {loc}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => {
+                        setShowFilters(true);
+                        document.getElementById('properties-list-section')?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 text-slate-500 text-[10px] font-bold rounded-lg border border-slate-100 transition"
+                    >
+                      + More
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Carousel indicators */}
             {activeBanners.length > 1 && (
-              <div className="flex justify-center space-x-1.5 pt-1">
+              <div className="flex justify-center space-x-2 pt-1">
                 {activeBanners.map((_, idx) => (
                   <button
                     key={idx}
                     onClick={() => setCurrentSlide(idx)}
-                    className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                      currentSlide === idx ? 'w-4 bg-[#2E180E]' : 'bg-slate-200'
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      currentSlide === idx ? 'w-6 bg-[#D97706]' : 'w-2 bg-slate-200'
                     }`}
                   />
                 ))}
