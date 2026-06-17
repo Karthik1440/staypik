@@ -12,7 +12,10 @@ import axios from 'axios';
 
 const AuthContext = createContext();
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+let API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+if (!API_URL.endsWith('/api') && !API_URL.endsWith('/api/')) {
+  API_URL = API_URL.replace(/\/$/, '') + '/api';
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);

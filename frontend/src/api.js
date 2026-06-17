@@ -1,8 +1,13 @@
 // src/api.js
 import axios from 'axios';
 
+let apiURL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+if (!apiURL.endsWith('/api') && !apiURL.endsWith('/api/')) {
+  apiURL = apiURL.replace(/\/$/, '') + '/api';
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
+  baseURL: apiURL,
 });
 
 // Attach SimpleJWT token to every request automatically

@@ -291,7 +291,7 @@ class PropertyListView(APIView):
         if owner_only and request.user.is_authenticated:
             properties = Property.objects.filter(owner=request.user).prefetch_related('images', 'rooms')
         else:
-            properties = Property.objects.filter(is_active=True).prefetch_related('images', 'rooms')
+            properties = Property.objects.filter(is_active=True, is_verified=True).prefetch_related('images', 'rooms')
 
         if city:
             properties = properties.filter(city__icontains=city)
