@@ -128,7 +128,7 @@ class AnnouncementBanner(models.Model):
 
 class GlobalNotification(models.Model):
     TYPE_CHOICES = [('info', 'Info'), ('promo', 'Promo / Offer'), ('alert', 'Alert'), ('update', 'Update')]
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='notifications')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='notifications', help_text="Leave blank to make this notification global (visible to all logged-in users).")
     title = models.CharField(max_length=255)
     message = models.TextField()
     notification_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='info')
