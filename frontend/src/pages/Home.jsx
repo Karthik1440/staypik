@@ -372,6 +372,13 @@ export default function Home() {
           return `${base}/${banner.image.replace(/^\//, '')}`;
         };
         
+        const getLocalitiesList = (banner) => {
+          if (!banner || !banner.localities) {
+            return ['HSR Layout', 'Koramangala', 'BTM Layout', 'Whitefield', 'Electronic City'];
+          }
+          return banner.localities.split(',').map(item => item.trim()).filter(item => item.length > 0);
+        };
+        
         return (
           <div className="space-y-4">
             <div className="bg-gradient-to-r from-[#FFFDF9] via-[#FFF9EE] to-[#FFF3DE] rounded-[32px] border border-[#EFE5D9] shadow-sm relative overflow-hidden flex flex-col md:flex-row items-stretch min-h-[380px] md:h-[420px] transition duration-500 text-left">
@@ -381,7 +388,7 @@ export default function Home() {
                 <div className="flex">
                   <span className="inline-flex items-center space-x-1.5 px-3 py-1 bg-[#FEF3C7] text-[#D97706] rounded-full text-xs font-black uppercase tracking-wider border border-[#FDE68A]">
                     <ShieldCheck size={14} className="stroke-[2.5px]" />
-                    <span>Verified Properties</span>
+                    <span>{activeBanner.badge_text || 'Verified Properties'}</span>
                   </span>
                 </div>
 
@@ -403,25 +410,33 @@ export default function Home() {
                     <div className="w-8 h-8 rounded-full bg-[#FEF3C7] text-[#D97706] flex items-center justify-center flex-shrink-0">
                       <IndianRupee size={14} className="stroke-[2.5px]" />
                     </div>
-                    <span className="text-[11px] md:text-xs font-extrabold text-slate-600 leading-tight">No Hidden Charges</span>
+                    <span className="text-[11px] md:text-xs font-extrabold text-slate-600 leading-tight">
+                      {activeBanner.feature_1 || 'No Hidden Charges'}
+                    </span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-8 h-8 rounded-full bg-[#FEF3C7] text-[#D97706] flex items-center justify-center flex-shrink-0">
                       <ShieldCheck size={14} className="stroke-[2.5px]" />
                     </div>
-                    <span className="text-[11px] md:text-xs font-extrabold text-slate-600 leading-tight">Verified Properties</span>
+                    <span className="text-[11px] md:text-xs font-extrabold text-slate-600 leading-tight">
+                      {activeBanner.feature_2 || 'Verified Properties'}
+                    </span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-8 h-8 rounded-full bg-[#FEF3C7] text-[#D97706] flex items-center justify-center flex-shrink-0">
                       <Phone size={14} className="stroke-[2.5px]" />
                     </div>
-                    <span className="text-[11px] md:text-xs font-extrabold text-slate-600 leading-tight">Direct Owner</span>
+                    <span className="text-[11px] md:text-xs font-extrabold text-slate-600 leading-tight">
+                      {activeBanner.feature_3 || 'Direct Owner'}
+                    </span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-8 h-8 rounded-full bg-[#FEF3C7] text-[#D97706] flex items-center justify-center flex-shrink-0">
                       <Heart size={14} className="stroke-[2.5px]" />
                     </div>
-                    <span className="text-[11px] md:text-xs font-extrabold text-slate-600 leading-tight">Trusted by Thousands</span>
+                    <span className="text-[11px] md:text-xs font-extrabold text-slate-600 leading-tight">
+                      {activeBanner.feature_4 || 'Trusted by Thousands'}
+                    </span>
                   </div>
                 </div>
 
@@ -452,7 +467,7 @@ export default function Home() {
                     <span>Popular in Bangalore</span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    {['HSR Layout', 'Koramangala', 'BTM Layout', 'Whitefield', 'Electronic City'].map((loc) => (
+                    {getLocalitiesList(activeBanner).map((loc) => (
                       <button
                         key={loc}
                         onClick={() => handleLocalityTagClick(loc)}

@@ -147,6 +147,12 @@ class HeroBanner(models.Model):
     link_url = models.CharField(max_length=255, default='/', blank=True)
     order = models.PositiveIntegerField(default=0, help_text="Banners are displayed in ascending order")
     is_active = models.BooleanField(default=True)
+    badge_text = models.CharField(max_length=100, default='Verified Properties', blank=True)
+    feature_1 = models.CharField(max_length=100, default='No Hidden Charges', blank=True)
+    feature_2 = models.CharField(max_length=100, default='Verified Properties', blank=True)
+    feature_3 = models.CharField(max_length=100, default='Direct Owner', blank=True)
+    feature_4 = models.CharField(max_length=100, default='Trusted by Thousands', blank=True)
+    localities = models.CharField(max_length=255, default='HSR Layout, Koramangala, BTM Layout, Whitefield, Electronic City', blank=True, help_text="Comma-separated list of popular localities")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

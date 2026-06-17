@@ -146,7 +146,7 @@ class GlobalNotificationSerializer(serializers.ModelSerializer):
 class HeroBannerSerializer(serializers.ModelSerializer):
     class Meta:
         model = HeroBanner
-        fields = ['id', 'title', 'subtitle', 'image', 'button_text', 'link_url', 'order', 'is_active', 'created_at']
+        fields = ['id', 'title', 'subtitle', 'image', 'button_text', 'link_url', 'order', 'is_active', 'badge_text', 'feature_1', 'feature_2', 'feature_3', 'feature_4', 'localities', 'created_at']
 
 
 class SupportInquirySerializer(serializers.ModelSerializer):
