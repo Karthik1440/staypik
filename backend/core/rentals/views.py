@@ -291,7 +291,7 @@ class PropertyListView(APIView):
         if owner_only and request.user.is_authenticated:
             properties = Property.objects.filter(owner=request.user).prefetch_related('images', 'rooms')
         else:
-            properties = Property.objects.filter(is_active=True, is_verified=True).prefetch_related('images', 'rooms')
+            properties = Property.objects.filter(is_active=True).prefetch_related('images', 'rooms')
 
         if city:
             properties = properties.filter(city__icontains=city)
@@ -328,11 +328,11 @@ class PropertyDetailView(APIView):
     def get(self, request, pk):
         prop = get_object_or_404(Property.objects.prefetch_related('images', 'rooms'), id=pk)
         
-        # Restrict unverified/deactivated listings to the owner and staff
-        if not prop.is_verified or not prop.is_active:
+        # Restrict deactivated listings to the owner and staff
+        if not prop.is_active:
             if not request.user.is_authenticated or (request.user != prop.owner and not request.user.is_staff):
                 return Response(
-                    {'detail': 'This listing is pending admin verification or has been deactivated.'}, 
+                    {'detail': 'This listing has been deactivated.'}, 
                     status=status.HTTP_403_FORBIDDEN
                 )
         
