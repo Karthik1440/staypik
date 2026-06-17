@@ -33,7 +33,10 @@ SECRET_KEY = 'django-insecure-9b&!)7pl_v%0$1e3j)i@f&xo#9(34*)!!gxlh)nucq-h7k!0@v
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['*', '.up.railway.app', '.render.com', '.vercel.app', 'localhost', '127.0.0.1']
+if DEBUG:
+    ALLOWED_HOSTS = ['*']
+else:
+    ALLOWED_HOSTS = ['.up.railway.app', '.render.com', '.vercel.app', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -134,7 +137,15 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-CORS_ALLOW_ALL_ORIGINS = True  # Simplified for deployment; can narrow later
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True  # Simplified for local development
+else:
+    CORS_ALLOW_ALL_ORIGINS = False
+    CORS_ALLOWED_ORIGINS = [
+        "https://staypik.com",
+        "https://staypik.vercel.app",
+        "https://staypik-frontend.vercel.app",
+    ]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -192,4 +203,13 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # DEBUG overridden by environment variables (defaults to True for local development)
 REQUIRE_OWNER_APPROVAL = os.getenv('REQUIRE_OWNER_APPROVAL', 'True') == 'True'
+
+# Security settings for production environment
+if not DEBUG:
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 

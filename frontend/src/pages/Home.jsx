@@ -13,6 +13,7 @@ export default function Home() {
   const [selectedGender, setSelectedGender] = useState('');
   const [selectedLocality, setSelectedLocality] = useState('');
   const [maxRent, setMaxRent] = useState('');
+  const [selectedSharing, setSelectedSharing] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [heroBanners, setHeroBanners] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -160,13 +161,15 @@ export default function Home() {
   // Filter listings client side for text search
   const filteredProperties = properties.filter(p => {
     const s = search.toLowerCase();
-    return (
+    const matchesSearch = (
       (p.name && p.name.toLowerCase().includes(s)) ||
       (p.locality && p.locality.toLowerCase().includes(s)) ||
       (p.city && p.city.toLowerCase().includes(s)) ||
       (p.property_type && p.property_type.toLowerCase().includes(s)) ||
       (p.gender && p.gender.toLowerCase().includes(s))
     );
+    const matchesSharing = !selectedSharing || (p.rooms && p.rooms.some(r => r.room_type === selectedSharing));
+    return matchesSearch && matchesSharing;
   });
 
   // Separate properties into featured (verified) and nearby (unverified) lists
@@ -232,7 +235,7 @@ export default function Home() {
 
         {/* Expandable Advanced Filters */}
         {showFilters && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-white text-slate-800 p-5 rounded-2xl shadow-lg text-left animate-scaleIn origin-top border border-slate-100">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-white text-slate-800 p-5 rounded-2xl shadow-lg text-left animate-scaleIn origin-top border border-slate-100">
             <div>
               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Gender</label>
               <select 
@@ -258,6 +261,21 @@ export default function Home() {
                 {popularLocalities.map(loc => (
                   <option key={loc} value={loc}>{loc}</option>
                 ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Sharing Type</label>
+              <select 
+                className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none"
+                value={selectedSharing}
+                onChange={(e) => setSelectedSharing(e.target.value)}
+              >
+                <option value="">Any Sharing</option>
+                <option value="Single">Single</option>
+                <option value="Double Sharing">Double Sharing</option>
+                <option value="Triple Sharing">Triple Sharing</option>
+                <option value="Quad Sharing">Quad Sharing</option>
               </select>
             </div>
 
@@ -519,7 +537,7 @@ export default function Home() {
         </div>
       ) : (
         <>
-          {(viewAll || search.trim() !== '' || selectedCategory || selectedGender || selectedLocality || maxRent) ? (
+          {(viewAll || search.trim() !== '' || selectedCategory || selectedGender || selectedLocality || maxRent || selectedSharing) ? (
             /* Vertical list for "See All" or "Search Results" */
             <div className="space-y-4">
               <div className="flex justify-between items-center px-1">
@@ -534,6 +552,7 @@ export default function Home() {
                     setSelectedGender('');
                     setSelectedLocality('');
                     setMaxRent('');
+                    setSelectedSharing('');
                   }} 
                   className="text-xs font-bold text-amber-700 hover:underline"
                 >
@@ -545,7 +564,7 @@ export default function Home() {
                 {filteredProperties.map(p => (
                   <div 
                     key={p.id}
-                    onClick={() => navigate(`/property/${p.id}`)}
+                    onClick={() => navigate(`/property/${p.id}${selectedSharing ? `?sharing=${encodeURIComponent(selectedSharing)}` : ''}`)}
                     className="w-full bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 cursor-pointer group"
                   >
                     <div className="relative aspect-[16/10] w-full bg-slate-50">
@@ -568,10 +587,8 @@ export default function Home() {
                       >
                         <Heart size={16} className={favorites.includes(p.id) ? 'fill-red-500 text-red-500' : 'text-slate-400'} />
                       </button>
-                      {getVacantBeds(p) === 0 ? (
+                      {getVacantBeds(p) === 0 && (
                         <span className="absolute bottom-3.5 right-3.5 px-2.5 py-1 text-[10px] font-black rounded bg-red-500 text-white shadow-sm">House Full</span>
-                      ) : (
-                        <span className="absolute bottom-3.5 right-3.5 px-2.5 py-1 text-[10px] font-black rounded bg-amber-600 text-white shadow-sm">{getVacantBeds(p)} Beds Left</span>
                       )}
                     </div>
                     <div className="p-5 text-left space-y-1.5">
@@ -634,8 +651,8 @@ export default function Home() {
                     {featuredProperties.map(p => (
                       <div 
                         key={p.id}
-                        onClick={() => navigate(`/property/${p.id}`)}
-                        className="w-72 bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 flex-shrink-0 cursor-pointer group"
+                        onClick={() => navigate(`/property/${p.id}${selectedSharing ? `?sharing=${encodeURIComponent(selectedSharing)}` : ''}`)}
+                        className="w-80 bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 flex-shrink-0 cursor-pointer group"
                       >
                         <div className="relative aspect-[4/3] w-full bg-slate-50">
                           <img 
@@ -657,38 +674,36 @@ export default function Home() {
                           >
                             <Heart size={14} className={favorites.includes(p.id) ? 'fill-red-500 text-red-500' : 'text-slate-400'} />
                           </button>
-                          {getVacantBeds(p) === 0 ? (
+                          {getVacantBeds(p) === 0 && (
                             <span className="absolute bottom-3 right-3 px-2 py-0.5 text-[9px] font-black rounded bg-red-500 text-white shadow-sm">House Full</span>
-                          ) : (
-                            <span className="absolute bottom-3 right-3 px-2 py-0.5 text-[9px] font-black rounded bg-[#FFF2E6] text-[#D97706] shadow-sm">{getVacantBeds(p)} Beds Left</span>
                           )}
                         </div>
-                        <div className="p-4 text-left">
-                          <h3 className="font-extrabold text-slate-800 text-sm leading-snug group-hover:text-amber-700 transition line-clamp-1">{p.name}</h3>
-                          <p className="text-[10px] font-semibold text-slate-400 mt-1 flex items-center justify-between">
+                        <div className="p-5 text-left">
+                          <h3 className="font-extrabold text-slate-800 text-base leading-snug group-hover:text-amber-700 transition line-clamp-1">{p.name}</h3>
+                          <p className="text-xs font-semibold text-slate-400 mt-1 flex items-center justify-between">
                             <span className="flex items-center">
-                              <MapPin size={10} className="mr-0.5" />
+                              <MapPin size={12} className="mr-0.5" />
                               {p.locality}, {p.city}
                             </span>
                             {p.distance !== undefined && p.distance !== null && (
-                              <span className="text-[9px] font-extrabold text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded ml-2">
+                              <span className="text-[10px] font-extrabold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded ml-2">
                                 📍 {p.distance.toFixed(1)} km
                               </span>
                             )}
                           </p>
-                          <div className="flex items-center justify-between mt-3.5 pt-3 border-t border-slate-50">
+                          <div className="flex items-center justify-between mt-4 pt-3.5 border-t border-slate-50">
                             <div>
                               <div className="flex items-baseline">
-                                <span className="text-sm font-black text-[#2E180E]">₹{Number(p.base_rent).toLocaleString()}</span>
-                                <span className="text-[9px] font-semibold text-slate-400 ml-0.5">/month</span>
+                                <span className="text-base font-black text-[#2E180E]">₹{Number(p.base_rent).toLocaleString()}</span>
+                                <span className="text-xs font-semibold text-slate-400 ml-0.5">/month</span>
                               </div>
                               {p.deposit > 0 && (
-                                <div className="text-[8px] font-bold text-[#2E180E]/70 mt-0.5">
+                                <div className="text-[10px] font-bold text-[#2E180E]/70 mt-0.5">
                                   Deposit: ₹{Number(p.deposit).toLocaleString()}
                                 </div>
                               )}
                             </div>
-                            <div className="flex items-center text-[10px] font-black text-[#D97706] bg-[#FFF2E6] px-1.5 py-0.5 rounded">
+                            <div className="flex items-center text-xs font-black text-[#D97706] bg-[#FFF2E6] px-2 py-0.5 rounded">
                               ⭐ {getRating(p.id)} ({getReviewsCount(p.id)})
                             </div>
                           </div>
@@ -716,10 +731,10 @@ export default function Home() {
                     {nearbyProperties.map(p => (
                       <div 
                         key={p.id}
-                        onClick={() => navigate(`/property/${p.id}`)}
+                        onClick={() => navigate(`/property/${p.id}${selectedSharing ? `?sharing=${encodeURIComponent(selectedSharing)}` : ''}`)}
                         className="bg-white rounded-[24px] p-3.5 border border-slate-100 shadow-sm flex space-x-4 cursor-pointer hover:shadow-md transition duration-200 group"
                       >
-                        <div className="relative w-28 h-28 rounded-2xl overflow-hidden bg-slate-50 flex-shrink-0">
+                        <div className="relative w-32 h-32 rounded-2xl overflow-hidden bg-slate-50 flex-shrink-0">
                           <img 
                             src={p.images && p.images.length > 0 ? p.images[0].image : 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=500&q=80'} 
                             alt={p.name}
@@ -729,17 +744,15 @@ export default function Home() {
                         <div className="flex-1 flex flex-col justify-between text-left py-0.5">
                           {/* Row 1 */}
                           <div className="flex justify-between items-start">
-                            <h3 className="font-extrabold text-slate-800 text-sm leading-snug group-hover:text-amber-700 transition line-clamp-1">{p.name}</h3>
-                            {getVacantBeds(p) === 0 ? (
+                            <h3 className="font-extrabold text-slate-800 text-[15px] leading-snug group-hover:text-amber-700 transition line-clamp-1">{p.name}</h3>
+                            {getVacantBeds(p) === 0 && (
                               <span className="px-2 py-0.5 text-[9px] font-extrabold rounded-lg bg-red-50 text-red-700 flex-shrink-0 ml-2">House Full</span>
-                            ) : (
-                              <span className="px-2 py-0.5 text-[9px] font-extrabold rounded-lg bg-[#FFF2E6] text-[#D97706] flex-shrink-0 ml-2">{getVacantBeds(p)} Beds Left</span>
                             )}
                           </div>
                           
                           {/* Row 2 */}
                           <div className="flex justify-between items-baseline mt-1">
-                            <p className="text-[11px] font-semibold text-slate-400 flex items-center">
+                            <p className="text-xs font-semibold text-slate-400 flex items-center">
                               {p.locality}, {p.city}
                               {p.distance !== undefined && p.distance !== null && (
                                 <span className="text-emerald-600 font-extrabold ml-1.5 bg-emerald-50 px-1 py-0.5 rounded text-[9px]">
@@ -749,25 +762,25 @@ export default function Home() {
                             </p>
                              <div className="text-right">
                                <div>
-                                 <span className="text-sm font-extrabold text-[#2E180E]">₹{Number(p.base_rent).toLocaleString()}</span>
-                                 <span className="text-[9px] font-bold text-slate-400">/month</span>
+                                 <span className="text-base font-extrabold text-[#2E180E]">₹{Number(p.base_rent).toLocaleString()}</span>
+                                 <span className="text-[10px] font-bold text-slate-400">/month</span>
                                </div>
                                {p.deposit > 0 && (
-                                 <span className="text-[8px] font-bold text-[#2E180E]/70 block -mt-0.5">Deposit: ₹{Number(p.deposit).toLocaleString()}</span>
+                                 <span className="text-[10px] font-bold text-[#2E180E]/70 block -mt-0.5">Deposit: ₹{Number(p.deposit).toLocaleString()}</span>
                                )}
                              </div>
                           </div>
                           
                           {/* Row 3 */}
                           <div className="flex justify-between items-end mt-2">
-                            <div className="flex items-center text-[11px] font-bold text-slate-500 space-x-1">
+                            <div className="flex items-center text-xs font-bold text-slate-500 space-x-1">
                               <span>⭐</span>
                               <span className="font-extrabold text-slate-800">{getRating(p.id)}</span>
                               <span className="text-slate-400 font-semibold">({getReviewsCount(p.id)})</span>
                             </div>
-
+ 
                             <div className="text-right leading-none">
-                              <span className="text-[9px] font-bold text-slate-400">Starting from</span>
+                              <span className="text-[10px] font-bold text-slate-400">Starting from</span>
                             </div>
                           </div>
                         </div>

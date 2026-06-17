@@ -103,6 +103,10 @@ class FirebaseLoginView(APIView):
             decoded_token = firebase_auth.verify_id_token(id_token)
         except Exception as e:
             # Offline local development fallback: decode JWT payload without verification
+            if not settings.DEBUG:
+                return Response({
+                    'detail': f'Token verification failed: {str(e)}'
+                }, status=status.HTTP_401_UNAUTHORIZED)
             try:
                 import base64
                 import json

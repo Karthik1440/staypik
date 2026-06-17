@@ -4,7 +4,8 @@ import { Heart, HelpCircle, Shield, Mail, Phone, MapPin } from 'lucide-react';
 export default function Footer() {
   return (
     <footer className="hidden md:block bg-gradient-to-b from-slate-900 to-slate-950 text-slate-400 border-t border-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Desktop Footer */}
+      <div className="hidden md:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           
           {/* Column 1: Brand & About */}
@@ -123,7 +124,38 @@ export default function Footer() {
             </span>
           </div>
         </div>
+      </div>
 
+      {/* Mobile Footer */}
+      <div className="block md:hidden py-8 px-6 text-center space-y-4">
+        <Link to="/" className="flex items-center justify-center space-x-2">
+          <span className="text-xl font-black tracking-tight text-white">
+            Stay<span className="text-amber-500">pik</span>
+          </span>
+        </Link>
+        <p className="text-[10px] font-semibold leading-relaxed max-w-xs mx-auto text-slate-400">
+          Find and book premium PGs, co-living spaces, and long-term rentals.
+        </p>
+        
+        {/* Simple Links */}
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400">
+          <Link to="/terms-privacy" className="hover:text-amber-500 transition-colors">Terms</Link>
+          <span>•</span>
+          <Link to="/terms-privacy" className="hover:text-amber-500 transition-colors">Privacy</Link>
+          <span>•</span>
+          <Link to="/saved" className="hover:text-amber-500 transition-colors">Saved</Link>
+          <span>•</span>
+          <Link to="/bookings" className="hover:text-amber-500 transition-colors">Visits</Link>
+        </div>
+
+        {/* Contact info */}
+        <div className="text-[9px] font-semibold text-slate-500">
+          <span>support@staypik.com • +91 98765 43210</span>
+        </div>
+
+        <div className="text-[9px] font-bold text-slate-500 pt-3 border-t border-slate-800/60 max-w-xs mx-auto">
+          © {new Date().getFullYear()} Staypik Technologies Inc.
+        </div>
       </div>
     </footer>
   );

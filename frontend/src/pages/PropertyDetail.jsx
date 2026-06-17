@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { 
   ArrowLeft, MapPin, ShieldCheck, Heart, Share2, 
   Wifi, Utensils, Shirt, Shield, Bath, Zap, Sparkles, Star,
-  ChevronRight, User, Home, DollarSign
+  ChevronLeft, ChevronRight, User, Home, DollarSign
 } from 'lucide-react';
 
 export default function PropertyDetail() {
@@ -17,6 +17,44 @@ export default function PropertyDetail() {
   const [loading, setLoading] = useState(true);
   const [readMore, setReadMore] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
+  const [activeRoomFilter, setActiveRoomFilter] = useState('');
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const handleRoomFilterChange = (filterType) => {
+    setActiveRoomFilter(filterType);
+    if (property?.rooms) {
+      const firstMatchingRoom = property.rooms.find(r => r.room_type === filterType);
+      if (firstMatchingRoom) {
+        setSelectedRoom(firstMatchingRoom);
+      }
+    }
+  };
+
+  // Touch handlers for swipe gesture
+  const [touchStart, setTouchStart] = useState(null);
+
+  const minSwipeDistance = 50;
+
+  const handleTouchStart = (e) => {
+    if (e.touches && e.touches.length > 0) {
+      setTouchStart(e.touches[0].clientX);
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!touchStart || !property?.images || property.images.length <= 1) return;
+    if (e.changedTouches && e.changedTouches.length > 0) {
+      const endX = e.changedTouches[0].clientX;
+      const distance = touchStart - endX;
+      const isLeftSwipe = distance > minSwipeDistance;
+      const isRightSwipe = distance < -minSwipeDistance;
+      if (isLeftSwipe) {
+        setCurrentImageIndex((prev) => (prev + 1) % property.images.length);
+      } else if (isRightSwipe) {
+        setCurrentImageIndex((prev) => (prev - 1 + property.images.length) % property.images.length);
+      }
+    }
+  };
 
   // Favorites state
   const [favorites, setFavorites] = useState(() => {
@@ -91,8 +129,32 @@ export default function PropertyDetail() {
       const res = await api.get(url);
       setProperty(res.data);
       if (res.data.rooms && res.data.rooms.length > 0) {
-        // Default select the first available room
-        setSelectedRoom(res.data.rooms[0]);
+        // Look for matching sharing param
+        const queryParams = new URLSearchParams(window.location.search);
+        const sharingParam = queryParams.get('sharing');
+        let initialFilter = '';
+        if (sharingParam) {
+          const matchedRoom = res.data.rooms.find(r => {
+            const type = (r.room_type || '').toLowerCase();
+            const param = sharingParam.toLowerCase();
+            return type.includes(param) || param.includes(type) ||
+                   (param.includes('single') && type.includes('single')) ||
+                   (param.includes('double') && type.includes('double')) ||
+                   (param.includes('triple') && type.includes('triple')) ||
+                   (param.includes('quad') && type.includes('quad'));
+          });
+          if (matchedRoom) {
+            initialFilter = matchedRoom.room_type;
+          }
+        }
+        
+        if (!initialFilter) {
+          initialFilter = res.data.rooms[0].room_type;
+        }
+
+        setActiveRoomFilter(initialFilter);
+        const initialRoom = res.data.rooms.find(r => r.room_type === initialFilter) || res.data.rooms[0];
+        setSelectedRoom(initialRoom);
       }
     } catch (e) {
       console.error(e);
@@ -108,7 +170,17 @@ export default function PropertyDetail() {
     name, property_type, gender, address, locality, city, description, base_rent, deposit, amenities, owner_name, owner_phone, images, rooms, is_verified
   } = property;
 
-  const coverImage = images && images.length > 0 ? images[0].image : 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80';
+  const filteredRooms = rooms && activeRoomFilter
+    ? rooms.filter(r => r.room_type === activeRoomFilter)
+    : (rooms || []);
+
+  const availableRoomTypes = rooms 
+    ? Array.from(new Set(rooms.map(r => r.room_type)))
+    : [];
+
+  const coverImage = images && images.length > 0 
+    ? (images[currentImageIndex]?.image || images[0].image) 
+    : 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80';
 
   const getAmenityIcon = (name) => {
     const norm = name.toLowerCase();
@@ -137,10 +209,14 @@ export default function PropertyDetail() {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-slate-50 min-h-screen pb-24 text-left animate-fadeIn">
+    <div className="max-w-md mx-auto bg-slate-50 min-h-screen pb-10 text-left animate-fadeIn">
       {/* Top Slider Hero Header */}
-      <div className="relative aspect-[4/3] bg-slate-200 w-full overflow-hidden">
-        <img src={coverImage} alt={name} className="w-full h-full object-cover" />
+      <div 
+        className="relative aspect-[4/3] bg-slate-200 w-full overflow-hidden cursor-grab active:cursor-grabbing"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        <img src={coverImage} alt={name} className="w-full h-full object-cover select-none pointer-events-none" />
         
         {/* Navigation Overlays directly on image */}
         <div className="absolute top-6 inset-x-6 flex justify-between items-center z-20">
@@ -175,14 +251,44 @@ export default function PropertyDetail() {
           </div>
         </div>
 
+        {/* Left and Right Chevron Navigation */}
+        {images && images.length > 1 && (
+          <>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+              }}
+              className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#1E293B]/40 backdrop-blur-sm text-white flex items-center justify-center hover:bg-[#1E293B]/60 transition active:scale-90 z-20"
+              title="Previous Image"
+            >
+              <ChevronLeft size={18} className="stroke-[2.5px]" />
+            </button>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentImageIndex((prev) => (prev + 1) % images.length);
+              }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#1E293B]/40 backdrop-blur-sm text-white flex items-center justify-center hover:bg-[#1E293B]/60 transition active:scale-90 z-20"
+              title="Next Image"
+            >
+              <ChevronRight size={18} className="stroke-[2.5px]" />
+            </button>
+          </>
+        )}
+
         {/* Slide Indicator Dots at bottom center */}
         <div className="absolute bottom-8 inset-x-0 flex justify-center space-x-1.5 z-20">
           {images && images.length > 0 ? (
             images.map((_, idx) => (
-              <span 
+              <button 
                 key={idx} 
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  idx === 0 ? 'w-5 bg-white' : 'w-1.5 bg-white/50'
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentImageIndex(idx);
+                }}
+                className={`h-1.5 rounded-full transition-all duration-300 focus:outline-none ${
+                  idx === currentImageIndex ? 'w-5 bg-white' : 'w-1.5 bg-white/50'
                 }`} 
               />
             ))
@@ -318,9 +424,33 @@ export default function PropertyDetail() {
         {/* Room Types Card Selector */}
         <div className="space-y-3">
           <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Room Types</h3>
+
+          {/* Room Type Selector Tabs */}
+          {availableRoomTypes.length > 1 && (
+            <div className="flex space-x-2 overflow-x-auto pb-1.5 -mx-6 px-6 hide-scrollbar flex-nowrap whitespace-nowrap">
+              {availableRoomTypes.map((type) => {
+                const isActive = activeRoomFilter === type;
+                return (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => handleRoomFilterChange(type)}
+                    className={`px-4 py-2 rounded-xl text-xs font-black border transition-all duration-150 active:scale-95 flex-shrink-0 ${
+                      isActive 
+                        ? 'bg-amber-700 border-amber-700 text-white shadow-sm'
+                        : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                    }`}
+                  >
+                    {type}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           <div className="space-y-3">
-            {rooms && rooms.length > 0 ? (
-              rooms.map((room) => {
+            {filteredRooms && filteredRooms.length > 0 ? (
+              filteredRooms.map((room) => {
                 const vacant = Math.max(0, room.total_beds - room.occupied_beds);
                 const isSelected = selectedRoom?.id === room.id;
                 return (
@@ -334,7 +464,9 @@ export default function PropertyDetail() {
                     }`}
                   >
                     <div className="space-y-1 text-left">
-                      <p className="font-extrabold text-slate-800 text-sm">{room.room_type}</p>
+                      <p className="font-extrabold text-slate-800 text-sm">
+                        {room.room_type} {room.room_number ? `(Room ${room.room_number})` : ''}
+                      </p>
                       <p className="text-[10px] font-bold text-slate-400">
                         {vacant === 0 ? 'No beds left' : `${vacant} bed${vacant > 1 ? 's' : ''} left`}
                         {room.deposit > 0 && ` • Deposit: ₹${Number(room.deposit).toLocaleString()}`}
@@ -354,35 +486,39 @@ export default function PropertyDetail() {
               })
             ) : (
               <div className="p-6 text-center border border-slate-100 rounded-2xl text-slate-400 font-semibold text-xs bg-slate-50">
-                No rooms configured. Contact host for details.
+                {rooms && rooms.length > 0 
+                  ? "No rooms match your search query." 
+                  : "No rooms configured. Contact host for details."}
               </div>
             )}
           </div>
-        </div>
-      </div>
 
-      {/* Bottom Sticky Booking Action Footer */}
-      <div className="fixed bottom-0 inset-x-0 bg-white border-t border-slate-100 px-6 py-4 z-40 flex justify-between items-center max-w-md mx-auto shadow-2xl">
-        <div className="text-left space-y-0.5">
-          <p className="text-[10px] font-bold text-slate-400">Price starting from</p>
-          <div className="flex items-baseline">
-            <span className="text-xl font-black text-slate-800">
-              ₹{Number(selectedRoom ? selectedRoom.monthly_rent : base_rent).toLocaleString()}
-            </span>
-            <span className="text-xs font-bold text-slate-400 ml-0.5">/month</span>
+          <hr className="border-slate-100 mt-6" />
+
+          {/* Booking Action Row */}
+          <div className="flex justify-between items-center pt-6">
+            <div className="text-left space-y-0.5">
+              <p className="text-[10px] font-bold text-slate-400">Price starting from</p>
+              <div className="flex items-baseline">
+                <span className="text-xl font-black text-slate-800">
+                  ₹{Number(selectedRoom ? selectedRoom.monthly_rent : base_rent).toLocaleString()}
+                </span>
+                <span className="text-xs font-bold text-slate-400 ml-0.5">/month</span>
+              </div>
+              <p className="text-[10px] font-extrabold text-amber-700">
+                Deposit: ₹{Number(selectedRoom && Number(selectedRoom.deposit) > 0 ? selectedRoom.deposit : (deposit || 0)).toLocaleString()}
+              </p>
+            </div>
+
+            <button 
+              onClick={handleBookVisitRedirect}
+              className="px-6 py-3.5 bg-amber-700 hover:bg-amber-800 text-white text-sm font-black rounded-2xl flex items-center space-x-2 shadow-lg shadow-amber-700/10 active:scale-95 transition-all duration-150"
+            >
+              <span>Book Visit</span>
+              <ChevronRight size={16} className="stroke-[3px]" />
+            </button>
           </div>
-          <p className="text-[10px] font-extrabold text-amber-700">
-            Deposit: ₹{Number(selectedRoom && Number(selectedRoom.deposit) > 0 ? selectedRoom.deposit : (deposit || 0)).toLocaleString()}
-          </p>
         </div>
-
-        <button 
-          onClick={handleBookVisitRedirect}
-          className="px-6 py-3.5 bg-amber-700 hover:bg-amber-800 text-white text-sm font-black rounded-2xl flex items-center space-x-2 shadow-lg shadow-amber-700/10 active:scale-95 transition-all duration-150"
-        >
-          <span>Book Visit</span>
-          <ChevronRight size={16} className="stroke-[3px]" />
-        </button>
       </div>
     </div>
   );

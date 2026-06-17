@@ -101,7 +101,9 @@ export default function VisitBooking() {
         state: {
           bookingId: `PG${bookingData.id || '12345678'}`,
           pgName: property.name,
-          roomType: selectedRoom ? selectedRoom.room_type : 'PG Room',
+          roomType: selectedRoom 
+            ? `${selectedRoom.room_type} ${selectedRoom.room_number ? `(Room ${selectedRoom.room_number})` : ''}` 
+            : 'PG Room',
           bedName: selectedBed,
           visitDate: visitDate,
           visitTime: visitTime
@@ -155,7 +157,9 @@ export default function VisitBooking() {
           <div className="flex justify-between items-center">
             <div className="text-left space-y-1">
               <h3 className="font-extrabold text-slate-800 text-sm">{property.name}</h3>
-              <p className="text-xs font-semibold text-slate-500">{selectedRoom ? selectedRoom.room_type : 'PG Room'}</p>
+              <p className="text-xs font-semibold text-slate-500">
+                {selectedRoom ? `${selectedRoom.room_type} ${selectedRoom.room_number ? `(Room ${selectedRoom.room_number})` : ''}` : 'PG Room'}
+              </p>
               <p className="text-xs font-black text-amber-700">₹{Number(selectedRoom ? selectedRoom.monthly_rent : property.base_rent).toLocaleString()}<span className="text-[10px] font-bold text-slate-400"> /month</span></p>
             </div>
             <button 
@@ -182,7 +186,9 @@ export default function VisitBooking() {
                 }`}
               >
                 <div className="text-left space-y-0.5">
-                  <p className="text-xs font-extrabold text-slate-800">{selectedRoom ? selectedRoom.room_type : 'Room 101'} - {bed.name}</p>
+                  <p className="text-xs font-extrabold text-slate-800">
+                    {selectedRoom ? `${selectedRoom.room_type} ${selectedRoom.room_number ? `(Room ${selectedRoom.room_number})` : ''}` : 'Room 101'} - {bed.name}
+                  </p>
                   <p className="text-[10px] font-bold text-slate-400">{bed.desc}</p>
                 </div>
                 <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
