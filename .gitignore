@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+db.sqlite3
+.env
+node_modules/
+build/
+dist/
+staticfiles/
+media/
+firebase-key.jsonbackend/core/core/firebase-key.json
+backend/core/core/firebase-key.json
