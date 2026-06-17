@@ -7,18 +7,6 @@ import { Home, Compass, User, Calendar, LogOut, LayoutDashboard, Building, Users
 export default function Header() {
   const { user, role, mode, toggleMode, logout } = useAuth();
   const location = useLocation();
-  if (location.pathname.startsWith('/property/')) return null;
-  
-  const isActive = (path) => {
-    if (path === '/') {
-      return location.pathname === '/' && !location.search.includes('focusSearch');
-    }
-    if (path === '/search') {
-      return location.pathname === '/' && location.search.includes('focusSearch');
-    }
-    return location.pathname === path;
-  };
-
   const { 
     notifications, 
     unreadCount, 
@@ -30,6 +18,18 @@ export default function Header() {
   } = useNotifications();
   const navigate = useNavigate();
   const [showNotifs, setShowNotifs] = useState(false);
+
+  if (location.pathname.startsWith('/property/')) return null;
+  
+  const isActive = (path) => {
+    if (path === '/') {
+      return location.pathname === '/' && !location.search.includes('focusSearch');
+    }
+    if (path === '/search') {
+      return location.pathname === '/' && location.search.includes('focusSearch');
+    }
+    return location.pathname === path;
+  };
 
   return (
     <>
