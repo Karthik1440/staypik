@@ -593,7 +593,7 @@ export default function Home() {
                     </div>
                     <div className="p-5 text-left space-y-1.5">
                       <div className="flex justify-between items-start">
-                        <h3 className="font-extrabold text-slate-800 text-base leading-snug group-hover:text-amber-700 transition line-clamp-1">{p.name}</h3>
+                        <h3 className="font-extrabold text-slate-800 text-base leading-snug group-hover:text-amber-700 transition line-clamp-2">{p.name}</h3>
                         <div className="flex items-center text-xs font-black text-amber-700 bg-amber-50 px-2 py-0.5 rounded ml-3">
                           ⭐ {getRating(p.id)} ({getReviewsCount(p.id)})
                         </div>
@@ -679,7 +679,7 @@ export default function Home() {
                           )}
                         </div>
                         <div className="p-5 text-left">
-                          <h3 className="font-extrabold text-slate-800 text-base leading-snug group-hover:text-amber-700 transition line-clamp-1">{p.name}</h3>
+                          <h3 className="font-extrabold text-slate-800 text-base leading-snug group-hover:text-amber-700 transition line-clamp-2">{p.name}</h3>
                           <p className="text-xs font-semibold text-slate-400 mt-1 flex items-center justify-between">
                             <span className="flex items-center">
                               <MapPin size={12} className="mr-0.5" />
@@ -755,7 +755,7 @@ export default function Home() {
                           <div className="flex flex-col justify-between py-0.5 min-w-0 flex-1 pr-2">
                             <div>
                               {/* Title */}
-                              <h3 className="font-extrabold text-slate-800 text-[15px] sm:text-base leading-snug group-hover:text-amber-700 transition line-clamp-1 min-w-0">
+                              <h3 className="font-extrabold text-slate-800 text-[15px] sm:text-base leading-snug group-hover:text-amber-700 transition line-clamp-2 min-w-0">
                                 {p.name}
                               </h3>
                               

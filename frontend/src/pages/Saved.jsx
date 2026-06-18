@@ -111,7 +111,7 @@ export default function Saved() {
                 <div className="flex flex-col justify-between py-0.5 min-w-0 flex-1 pr-2">
                   <div>
                     {/* Title */}
-                    <h3 className="font-extrabold text-slate-800 text-[15px] sm:text-base leading-snug group-hover:text-amber-700 transition line-clamp-1 min-w-0">
+                    <h3 className="font-extrabold text-slate-800 text-[15px] sm:text-base leading-snug group-hover:text-amber-700 transition line-clamp-2 min-w-0">
                       {p.name}
                     </h3>
                     
