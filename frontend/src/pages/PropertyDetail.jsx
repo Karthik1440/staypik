@@ -5,7 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import { 
   ArrowLeft, MapPin, ShieldCheck, Heart, Share2, 
   Wifi, Utensils, Shirt, Shield, Bath, Zap, Sparkles, Star,
-  ChevronLeft, ChevronRight, User, Home, DollarSign
+  ChevronLeft, ChevronRight, User, Home, DollarSign,
+  Droplet, Car, ArrowUpDown
 } from 'lucide-react';
 
 export default function PropertyDetail() {
@@ -190,6 +191,9 @@ export default function PropertyDetail() {
     if (norm.includes('cctv') || norm.includes('security')) return <Shield size={18} />;
     if (norm.includes('washroom') || norm.includes('bathroom') || norm.includes('bath')) return <Bath size={18} />;
     if (norm.includes('power') || norm.includes('electricity') || norm.includes('generator') || norm.includes('ac')) return <Zap size={18} />;
+    if (norm.includes('water') || norm.includes('drinking')) return <Droplet size={18} />;
+    if (norm.includes('parking') || norm.includes('car')) return <Car size={18} />;
+    if (norm.includes('lift') || norm.includes('elevator')) return <ArrowUpDown size={18} />;
     return <Sparkles size={18} />;
   };
 
@@ -391,7 +395,7 @@ export default function PropertyDetail() {
               amenities.slice(0, 6).map((amenity, idx) => (
                 <div key={idx} className="flex flex-col items-center justify-center p-3 rounded-2xl bg-slate-50 border border-slate-100 text-slate-600 space-y-1.5">
                   <div className="text-amber-700">{getAmenityIcon(amenity)}</div>
-                  <span className="text-[10px] font-extrabold truncate w-full text-center">{amenity}</span>
+                  <span className="text-[10px] font-extrabold w-full text-center break-words">{amenity}</span>
                 </div>
               ))
             ) : (

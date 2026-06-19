@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../api';
-import { Search, MapPin, SlidersHorizontal, Heart, Sparkles, Locate, ShieldCheck, Phone, ArrowRight, IndianRupee, Star, Wifi, Utensils, Shirt, User } from 'lucide-react';
+import { Search, MapPin, SlidersHorizontal, Heart, Sparkles, Locate, ShieldCheck, Phone, ArrowRight, IndianRupee, Star, Wifi, Utensils, Shirt, User, Droplet, Car, ArrowUpDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Home() {
@@ -62,6 +62,9 @@ export default function Home() {
     if (norm.includes('wifi')) return <Wifi size={12} />;
     if (norm.includes('food') || norm.includes('kitchen') || norm.includes('meal')) return <Utensils size={12} />;
     if (norm.includes('laundry') || norm.includes('wash')) return <Shirt size={12} />;
+    if (norm.includes('water') || norm.includes('drinking')) return <Droplet size={12} />;
+    if (norm.includes('parking') || norm.includes('car')) return <Car size={12} />;
+    if (norm.includes('lift') || norm.includes('elevator')) return <ArrowUpDown size={12} />;
     return <Sparkles size={12} />;
   };
 
@@ -699,6 +702,11 @@ export default function Home() {
                             <div className="flex items-center text-xs font-bold text-slate-400">
                               <MapPin size={12} className="mr-1 text-slate-400 flex-shrink-0" />
                               <span className="truncate">{p.locality}, {p.city}</span>
+                              {p.distance !== undefined && p.distance !== null && (
+                                <span className="text-[10px] font-extrabold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded ml-2 whitespace-nowrap">
+                                  📍 {p.distance.toFixed(1)} km
+                                </span>
+                              )}
                             </div>
                             <div className="flex flex-wrap gap-1.5 pt-0.5">
                               <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-md text-[10px] font-black bg-[#FFF2E6] text-[#D97706]">
@@ -791,6 +799,11 @@ export default function Home() {
                             <div className="flex items-center text-[11px] font-bold text-slate-400">
                               <MapPin size={11} className="mr-1 text-slate-400 flex-shrink-0" />
                               <span className="truncate">{p.locality}, {p.city}</span>
+                              {p.distance !== undefined && p.distance !== null && (
+                                <span className="inline-flex items-center gap-0.5 text-emerald-600 font-extrabold bg-emerald-50 px-1.5 py-0.5 rounded text-[9px] ml-2 whitespace-nowrap">
+                                  📍 {p.distance.toFixed(1)} km
+                                </span>
+                              )}
                             </div>
                             <div className="flex flex-wrap gap-1 pt-0.5">
                               <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[9px] font-black bg-[#FFF2E6] text-[#D97706]">

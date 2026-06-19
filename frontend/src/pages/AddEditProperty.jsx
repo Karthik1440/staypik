@@ -39,7 +39,7 @@ export default function AddEditProperty() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const amenitiesList = ['WiFi', 'AC', 'Attached Washroom', 'Food Included', 'Laundry Service', 'Security / CCTV', 'Power Backup', 'Gym'];
+  const amenitiesList = ['WiFi', 'AC', 'Attached Washroom', 'Food Included', 'Laundry Service', 'Security / CCTV', 'Power Backup', 'Gym', 'Drinking Water', 'Parking', 'Lift'];
 
   useEffect(() => {
     if (isEdit) {
