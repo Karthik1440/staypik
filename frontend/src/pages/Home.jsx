@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../api';
-import { Search, MapPin, SlidersHorizontal, Heart, Sparkles, Locate, ShieldCheck, Phone, ArrowRight, IndianRupee, Star } from 'lucide-react';
+import { Search, MapPin, SlidersHorizontal, Heart, Sparkles, Locate, ShieldCheck, Phone, ArrowRight, IndianRupee, Star, Wifi, Utensils, Shirt, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Home() {
@@ -55,6 +55,14 @@ export default function Home() {
 
   const getReviewsCount = (id) => {
     return 30 + (id * 23) % 150;
+  };
+
+  const getAmenityIcon = (name) => {
+    const norm = name.toLowerCase();
+    if (norm.includes('wifi')) return <Wifi size={12} />;
+    if (norm.includes('food') || norm.includes('kitchen') || norm.includes('meal')) return <Utensils size={12} />;
+    if (norm.includes('laundry') || norm.includes('wash')) return <Shirt size={12} />;
+    return <Sparkles size={12} />;
   };
 
   // Focus search input when navigated with focusSearch query
@@ -172,9 +180,9 @@ export default function Home() {
     return matchesSearch && matchesSharing;
   });
 
-  // Separate properties into featured (verified) and nearby (unverified) lists
-  const featuredProperties = filteredProperties.filter(p => p.is_verified);
-  const nearbyProperties = filteredProperties.filter(p => !p.is_verified);
+  // Separate properties into featured and nearby lists using is_featured
+  const featuredProperties = filteredProperties.filter(p => p.is_featured);
+  const nearbyProperties = filteredProperties.filter(p => !p.is_featured);
 
   const getVacantBeds = (p) => {
     const totalBeds = p.rooms ? p.rooms.reduce((acc, r) => acc + r.total_beds, 0) : 0;
@@ -573,10 +581,10 @@ export default function Home() {
                         alt={p.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                       />
-                      {p.is_verified && (
+                      {p.is_featured && (
                         <div className="absolute top-3.5 left-3.5 flex flex-col gap-1">
-                          <span className="px-2.5 py-1 text-[10px] font-extrabold rounded bg-emerald-500 text-white shadow-sm">
-                            ✓ Verified
+                          <span className="px-2.5 py-1 text-[10px] font-extrabold rounded bg-[#FEF3C7] text-[#D97706] shadow-sm border border-[#FDE68A]">
+                            ★ Featured
                           </span>
                         </div>
                       )}
@@ -638,7 +646,7 @@ export default function Home() {
               {featuredProperties.length > 0 && (
                 <div className="space-y-4">
                   <div className="flex justify-between items-baseline">
-                    <h2 className="text-base font-black text-slate-800 tracking-tight text-left">Featured PGs</h2>
+                    <h2 className="text-base font-black text-slate-800 tracking-tight text-left">Featured Listings</h2>
                     <button 
                       onClick={() => setViewAll(true)} 
                       className="text-xs font-bold text-slate-400 hover:text-slate-600"
@@ -652,25 +660,23 @@ export default function Home() {
                       <div 
                         key={p.id}
                         onClick={() => navigate(`/property/${p.id}${selectedSharing ? `?sharing=${encodeURIComponent(selectedSharing)}` : ''}`)}
-                        className="w-80 bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 flex-shrink-0 cursor-pointer group"
+                        className="w-80 bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 flex-shrink-0 cursor-pointer group flex flex-col h-full"
                       >
-                        <div className="relative aspect-[4/3] w-full bg-slate-50">
+                        {/* Thumbnail */}
+                        <div className="relative aspect-[4/3] w-full bg-slate-50 overflow-hidden">
                           <img 
                             src={p.images && p.images.length > 0 ? p.images[0].image : 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=500&q=80'} 
                             alt={p.name}
                             className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                           />
-                          {p.is_verified && (
-                            <div className="absolute top-3 left-3 flex flex-col gap-1">
-                              <span className="px-2 py-0.5 text-[9px] font-extrabold rounded bg-emerald-500 text-white shadow-sm">
-                                ✓ Verified
-                              </span>
-                            </div>
-                          )}
+                          <div className="absolute top-3 left-3 bg-[#FEF3C7] text-[#D97706] px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border border-[#FDE68A] flex items-center space-x-1 shadow-sm">
+                            <Star size={10} className="fill-[#D97706] text-[#D97706]" />
+                            <span>FEATURED</span>
+                          </div>
                           <button 
                             type="button"
                             onClick={(e) => { e.stopPropagation(); toggleFavorite(p.id); }}
-                            className="absolute top-3 right-3 p-1.5 rounded-full bg-white/85 backdrop-blur-sm text-slate-400 hover:text-red-500 shadow-sm transition"
+                            className="absolute top-3 right-3 p-1.5 rounded-full bg-white/90 backdrop-blur-sm text-slate-400 hover:text-red-500 shadow-sm transition active:scale-95 flex items-center justify-center z-10"
                           >
                             <Heart size={14} className={favorites.includes(p.id) ? 'fill-red-500 text-red-500' : 'text-slate-400'} />
                           </button>
@@ -678,34 +684,57 @@ export default function Home() {
                             <span className="absolute bottom-3 right-3 px-2 py-0.5 text-[9px] font-black rounded bg-red-500 text-white shadow-sm">House Full</span>
                           )}
                         </div>
-                        <div className="p-5 text-left">
-                          <h3 className="font-extrabold text-slate-800 text-base leading-snug group-hover:text-amber-700 transition line-clamp-2">{p.name}</h3>
-                          <p className="text-xs font-semibold text-slate-400 mt-1 flex items-center justify-between">
-                            <span className="flex items-center">
-                              <MapPin size={12} className="mr-0.5" />
-                              {p.locality}, {p.city}
-                            </span>
-                            {p.distance !== undefined && p.distance !== null && (
-                              <span className="text-[10px] font-extrabold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded ml-2">
-                                📍 {p.distance.toFixed(1)} km
-                              </span>
-                            )}
-                          </p>
-                          <div className="flex items-center justify-between mt-4 pt-3.5 border-t border-slate-50">
-                            <div>
-                              <div className="flex items-baseline">
-                                <span className="text-base font-black text-[#2E180E]">₹{Number(p.base_rent).toLocaleString()}</span>
-                                <span className="text-xs font-semibold text-slate-400 ml-0.5">/month</span>
+                        {/* Body */}
+                        <div className="p-4 flex-1 flex flex-col justify-between text-left space-y-3.5">
+                          <div className="space-y-1.5">
+                            <div className="flex justify-between items-start">
+                              <h3 className="font-extrabold text-slate-800 text-[15px] sm:text-base leading-snug truncate pr-2 group-hover:text-amber-700 transition">
+                                {p.name}
+                              </h3>
+                              <div className="flex items-center text-xs font-black text-slate-800 flex-shrink-0">
+                                <Star size={12} className="text-amber-500 fill-amber-500 mr-0.5" />
+                                <span>{getRating(p.id)} <span className="text-slate-400 font-semibold">({getReviewsCount(p.id)})</span></span>
                               </div>
-                              {p.deposit > 0 && (
-                                <div className="text-[10px] font-bold text-[#2E180E]/70 mt-0.5">
-                                  Deposit: ₹{Number(p.deposit).toLocaleString()}
+                            </div>
+                            <div className="flex items-center text-xs font-bold text-slate-400">
+                              <MapPin size={12} className="mr-1 text-slate-400 flex-shrink-0" />
+                              <span className="truncate">{p.locality}, {p.city}</span>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5 pt-0.5">
+                              <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-md text-[10px] font-black bg-[#FFF2E6] text-[#D97706]">
+                                <User size={10} className="stroke-[2.5px]" />
+                                <span>Direct Owner</span>
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-4 text-[11px] font-bold text-slate-500 pt-1.5">
+                              {p.amenities && p.amenities.slice(0, 3).map((amenity, idx) => (
+                                <div key={idx} className="flex items-center space-x-1 flex-shrink-0">
+                                  <span className="text-[#D97706]">{getAmenityIcon(amenity)}</span>
+                                  <span>{amenity.split(' ')[0]}</span>
                                 </div>
-                              )}
+                              ))}
                             </div>
-                            <div className="flex items-center text-xs font-black text-[#D97706] bg-[#FFF2E6] px-2 py-0.5 rounded">
-                              ⭐ {getRating(p.id)} ({getReviewsCount(p.id)})
+                          </div>
+                          <div>
+                            <div className="pt-2 border-t border-slate-50 flex items-center justify-between">
+                              <div className="text-left">
+                                <div className="flex items-baseline">
+                                  <span className="text-base sm:text-lg font-black text-slate-800">₹{Number(p.base_rent).toLocaleString()}</span>
+                                  <span className="text-xs font-semibold text-slate-400 ml-0.5">/month</span>
+                                </div>
+                                {p.deposit > 0 && (
+                                  <div className="text-[10px] font-bold text-slate-400 mt-0.5">
+                                    Deposit: ₹{Number(p.deposit).toLocaleString()}
+                                  </div>
+                                )}
+                              </div>
                             </div>
+                            <button 
+                              type="button"
+                              className="w-full mt-3 py-2 bg-[#D97706] hover:bg-[#B45309] text-white text-xs font-black rounded-xl transition duration-150 active:scale-[0.98] shadow-sm flex items-center justify-center"
+                            >
+                              View Details
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -732,7 +761,7 @@ export default function Home() {
                       <div 
                         key={p.id}
                         onClick={() => navigate(`/property/${p.id}${selectedSharing ? `?sharing=${encodeURIComponent(selectedSharing)}` : ''}`)}
-                        className="bg-white rounded-2xl p-3 border border-slate-100/80 shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex space-x-3.5 cursor-pointer hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:border-amber-200/50 transition-all duration-300 active:scale-[0.99] group"
+                        className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm flex space-x-3.5 cursor-pointer hover:shadow-md transition duration-300 group text-left"
                       >
                         <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-xl overflow-hidden bg-slate-50 flex-shrink-0">
                           <img 
@@ -740,68 +769,64 @@ export default function Home() {
                             alt={p.name}
                             className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60"></div>
-                          
-                          {/* Overlaid Badges on Image */}
-                          <span className={`absolute top-2 left-2 px-2 py-0.5 text-[9px] font-black rounded shadow-sm text-white ${
-                            p.gender === 'Boys' ? 'bg-blue-600/90' : p.gender === 'Girls' ? 'bg-pink-600/90' : 'bg-purple-600/90'
-                          }`}>
-                            {p.gender === 'Unisex' ? 'Co-Ed' : p.gender}
-                          </span>
-                          
+                          <button 
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); toggleFavorite(p.id); }}
+                            className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 backdrop-blur-sm text-slate-400 hover:text-red-500 shadow-sm transition active:scale-95 flex items-center justify-center z-10"
+                          >
+                            <Heart size={12} className={favorites.includes(p.id) ? 'fill-red-500 text-red-500' : 'text-slate-400'} />
+                          </button>
                         </div>
-                        <div className="flex-1 flex justify-between items-stretch min-w-0">
-                          {/* Middle Column: Title, Locality + PG Tag, Rating */}
-                          <div className="flex flex-col justify-between py-0.5 min-w-0 flex-1 pr-2">
-                            <div>
-                              {/* Title */}
-                              <h3 className="font-extrabold text-slate-800 text-[15px] sm:text-base leading-snug group-hover:text-amber-700 transition line-clamp-2 min-w-0">
+                        <div className="flex-1 flex flex-col justify-between min-w-0">
+                          <div className="space-y-1">
+                            <div className="flex justify-between items-start">
+                              <h3 className="font-extrabold text-slate-800 text-[14px] sm:text-base leading-snug truncate pr-2 group-hover:text-amber-700 transition">
                                 {p.name}
                               </h3>
-                              
-                              {/* Locality, Distance, and PG Tag inline */}
-                              <div className="flex items-center flex-wrap gap-x-1.5 gap-y-1 mt-1 text-[11px] font-semibold text-slate-400 min-w-0">
-                                <span className="truncate flex items-center">
-                                  <MapPin size={11} className="mr-0.5 text-slate-450 flex-shrink-0" />
-                                  {p.locality}, {p.city}
-                                </span>
-                                {p.distance !== undefined && p.distance !== null && (
-                                  <span className="inline-flex items-center gap-0.5 text-emerald-600 font-extrabold bg-emerald-50 px-1 py-0.5 rounded text-[9px] whitespace-nowrap">
-                                    📍 {p.distance.toFixed(1)} km
-                                  </span>
-                                )}
-                                <span className="text-[9px] font-extrabold bg-[#1E3A8A]/90 text-white px-1.5 py-0.5 rounded flex-shrink-0 uppercase">
-                                  {p.property_type}
-                                </span>
+                              <div className="flex items-center text-xs font-black text-slate-800 flex-shrink-0">
+                                <Star size={11} className="text-amber-500 fill-amber-500 mr-0.5" />
+                                <span>{getRating(p.id)} <span className="text-slate-400 font-semibold">({getReviewsCount(p.id)})</span></span>
                               </div>
                             </div>
-                            
-                            {/* Rating at bottom-left */}
-                            <div className="flex items-center text-xs font-bold text-slate-500 space-x-1 mt-2">
-                              <Star size={11} className="text-amber-500 fill-amber-500 stroke-[2px]" />
-                              <span className="font-extrabold text-slate-800">{getRating(p.id)}</span>
-                              <span className="text-slate-450 font-medium">({getReviewsCount(p.id)})</span>
+                            <div className="flex items-center text-[11px] font-bold text-slate-400">
+                              <MapPin size={11} className="mr-1 text-slate-400 flex-shrink-0" />
+                              <span className="truncate">{p.locality}, {p.city}</span>
+                            </div>
+                            <div className="flex flex-wrap gap-1 pt-0.5">
+                              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[9px] font-black bg-[#FFF2E6] text-[#D97706]">
+                                <User size={9} className="stroke-[2.5px]" />
+                                <span>Direct Owner</span>
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-3 text-[10px] font-bold text-slate-500 pt-1">
+                              {p.amenities && p.amenities.slice(0, 3).map((amenity, idx) => (
+                                <div key={idx} className="flex items-center space-x-0.5 flex-shrink-0">
+                                  <span className="text-[#D97706]">{getAmenityIcon(amenity)}</span>
+                                  <span>{amenity.split(' ')[0]}</span>
+                                </div>
+                              ))}
                             </div>
                           </div>
                           
-                          {/* Right Column: Rent and Deposit stacked */}
-                          <div className="flex flex-col justify-between items-end py-0.5 text-right flex-shrink-0 pl-1.5">
-                            {/* Rent Section */}
-                            <div>
-                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block leading-none">Rent</span>
-                              <div className="leading-none flex items-baseline justify-end mt-1.5">
-                                <span className="text-base sm:text-lg font-black text-[#2E180E]">₹{Number(p.base_rent).toLocaleString()}</span>
+                          <div className="flex justify-between items-end pt-2 border-t border-slate-50">
+                            <div className="text-left">
+                              <div className="flex items-baseline leading-none">
+                                <span className="text-sm sm:text-base font-black text-slate-800">₹{Number(p.base_rent).toLocaleString()}</span>
                                 <span className="text-[10px] font-bold text-slate-450 ml-0.5">/mo</span>
                               </div>
+                              {p.deposit > 0 && (
+                                <div className="text-[9px] font-bold text-slate-400 mt-1 leading-none">
+                                  Deposit: ₹{Number(p.deposit).toLocaleString()}
+                                </div>
+                              )}
                             </div>
                             
-                            {/* Deposit Section */}
-                            {p.deposit > 0 && (
-                              <div className="mt-2 text-right">
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block leading-none">Deposit</span>
-                                <span className="text-xs sm:text-sm font-black text-slate-700 block mt-1.5 leading-none">₹{Number(p.deposit).toLocaleString()}</span>
-                              </div>
-                            )}
+                            <button
+                              type="button"
+                              className="px-3.5 py-1.5 border border-[#D97706] text-[#D97706] hover:bg-amber-50/50 bg-white text-[11px] font-black rounded-lg transition active:scale-95"
+                            >
+                              View Details
+                            </button>
                           </div>
                         </div>
                       </div>

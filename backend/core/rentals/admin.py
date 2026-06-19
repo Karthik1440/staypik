@@ -34,9 +34,9 @@ class OwnerProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Property)
 class PropertyAdmin(admin.ModelAdmin):
-    list_display = ('name', 'owner', 'property_type', 'gender', 'city', 'base_rent', 'is_active', 'is_verified')
-    list_filter = ('property_type', 'gender', 'city', 'is_active', 'is_verified')
-    list_editable = ('is_active', 'is_verified')
+    list_display = ('name', 'owner', 'property_type', 'gender', 'city', 'base_rent', 'is_active', 'is_verified', 'is_featured')
+    list_filter = ('property_type', 'gender', 'city', 'is_active', 'is_verified', 'is_featured')
+    list_editable = ('is_active', 'is_verified', 'is_featured')
     search_fields = ('name', 'locality', 'city', 'address')
     inlines = [PropertyImageInline, RoomInline]
 

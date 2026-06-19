@@ -55,7 +55,7 @@ class PropertySerializer(serializers.ModelSerializer):
         fields = [
             'id', 'owner', 'owner_name', 'owner_phone', 'name', 'property_type', 'gender',
             'address', 'locality', 'city', 'description', 'base_rent', 'deposit', 
-            'amenities', 'is_active', 'is_verified', 'latitude', 'longitude', 'distance', 'images', 'rooms', 'created_at'
+            'amenities', 'is_active', 'is_verified', 'is_featured', 'latitude', 'longitude', 'distance', 'images', 'rooms', 'created_at'
         ]
 
     def get_owner_phone(self, obj):

@@ -57,6 +57,7 @@ def seed():
         deposit=18000.00,
         amenities=["WiFi", "AC", "Attached Washroom", "Food Included", "Laundry Service", "Security / CCTV"],
         is_verified=True,
+        is_featured=True,
         latitude=12.911600,
         longitude=77.638900
     )
@@ -74,6 +75,7 @@ def seed():
         deposit=10000.00,
         amenities=["WiFi", "Attached Washroom", "Power Backup", "Security / CCTV"],
         is_verified=True,
+        is_featured=True,
         latitude=12.935200,
         longitude=77.624400
     )
@@ -91,6 +93,7 @@ def seed():
         deposit=12000.00,
         amenities=["WiFi", "Food Included", "Laundry Service", "Security / CCTV"],
         is_verified=True,
+        is_featured=True,
         latitude=12.908100,
         longitude=77.647600
     )
@@ -125,6 +128,7 @@ def seed():
         deposit=30000.00,
         amenities=["WiFi", "AC", "Food Included", "Power Backup", "Gym"],
         is_verified=True,
+        is_featured=True,
         latitude=12.978400,
         longitude=77.640800
     )
