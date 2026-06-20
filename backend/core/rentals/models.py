@@ -62,6 +62,9 @@ class Room(models.Model):
     occupied_beds = models.PositiveIntegerField(default=0)
     monthly_rent = models.DecimalField(max_digits=10, decimal_places=2)
     deposit = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    furnishing = models.CharField(max_length=50, blank=True, default='')
+    bathroom = models.CharField(max_length=50, blank=True, default='')
+    balcony = models.CharField(max_length=50, blank=True, default='')
 
     def __str__(self):
         return f"Room {self.room_number} ({self.property.name})"

@@ -27,7 +27,7 @@ class PropertyImageSerializer(serializers.ModelSerializer):
 class RoomSerializer(serializers.ModelSerializer):
     class Meta:
         model = Room
-        fields = ['id', 'room_number', 'room_type', 'total_beds', 'occupied_beds', 'monthly_rent', 'deposit']
+        fields = ['id', 'room_number', 'room_type', 'total_beds', 'occupied_beds', 'monthly_rent', 'deposit', 'furnishing', 'bathroom', 'balcony']
 
 import math
 

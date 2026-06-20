@@ -203,6 +203,11 @@ export default function PropertyDetail() {
     return Math.max(0, totalBeds - occupiedBeds);
   };
 
+  const getAvailableUnits = (p) => {
+    if (!p?.rooms) return 0;
+    return p.rooms.filter(r => (r.occupied_beds || 0) < (r.total_beds || 1)).length;
+  };
+
   const handleBookVisitRedirect = () => {
     if (!user) {
       navigate('/login');
@@ -360,14 +365,18 @@ export default function PropertyDetail() {
             </div>
           </div>
           
-          {/* Item 3: Beds Available */}
+          {/* Item 3: Beds Available or Units Available */}
           <div className="flex items-center space-x-2.5">
             <div className="w-9 h-9 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-amber-700 flex-shrink-0 shadow-sm">
               <ShieldCheck size={16} />
             </div>
             <div className="text-left min-w-0">
-              <p className="text-[10px] font-bold text-slate-400 leading-none">Beds Left</p>
-              <p className="text-xs font-extrabold text-slate-700 mt-1 truncate">{getVacantBeds(property)}</p>
+              <p className="text-[10px] font-bold text-slate-400 leading-none">
+                {property_type === 'Apartment' ? "Flats Left" : "Beds Left"}
+              </p>
+              <p className="text-xs font-extrabold text-slate-700 mt-1 truncate">
+                {property_type === 'Apartment' ? getAvailableUnits(property) : getVacantBeds(property)}
+              </p>
             </div>
           </div>
 
@@ -410,7 +419,9 @@ export default function PropertyDetail() {
 
         {/* About Block */}
         <div className="space-y-2">
-          <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">About this PG</h3>
+          <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">
+            {property_type === 'Apartment' ? 'About this Apartment' : 'About this PG'}
+          </h3>
           <p className="text-slate-600 text-xs leading-relaxed font-semibold">
             {readMore ? description : `${description.slice(0, 140)}...`}
           </p>
@@ -425,9 +436,11 @@ export default function PropertyDetail() {
 
         <hr className="border-slate-100" />
 
-        {/* Room Types Card Selector */}
+        {/* Room/Apartment Types Card Selector */}
         <div className="space-y-3">
-          <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Room Types</h3>
+          <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">
+            {property_type === 'Apartment' ? 'Apartment Types' : 'Room Types'}
+          </h3>
 
           {/* Room Type Selector Tabs */}
           {availableRoomTypes.length > 1 && (
@@ -469,11 +482,23 @@ export default function PropertyDetail() {
                   >
                     <div className="space-y-1 text-left">
                       <p className="font-extrabold text-slate-800 text-sm">
-                        {room.room_type} {room.room_number ? `(Room ${room.room_number})` : ''}
+                        {room.room_type} {room.room_number ? (property_type === 'Apartment' ? `(Flat/Unit ${room.room_number})` : `(Room ${room.room_number})`) : ''}
                       </p>
                       <p className="text-[10px] font-bold text-slate-400">
-                        {vacant === 0 ? 'No beds left' : `${vacant} bed${vacant > 1 ? 's' : ''} left`}
-                        {room.deposit > 0 && ` • Deposit: ₹${Number(room.deposit).toLocaleString()}`}
+                        {property_type === 'Apartment' ? (
+                          <>
+                            {room.furnishing && `${room.furnishing}`}
+                            {room.bathroom && ` • ${room.bathroom} Bath`}
+                            {room.balcony && ` • ${room.balcony} Balcony`}
+                            {room.deposit > 0 && ` • Deposit: ₹${Number(room.deposit).toLocaleString()}`}
+                            {room.occupied_beds > 0 ? ' • Rented / Occupied' : ' • Available'}
+                          </>
+                        ) : (
+                          <>
+                            {vacant === 0 ? 'No beds left' : `${vacant} bed${vacant > 1 ? 's' : ''} left`}
+                            {room.deposit > 0 && ` • Deposit: ₹${Number(room.deposit).toLocaleString()}`}
+                          </>
+                        )}
                       </p>
                     </div>
 

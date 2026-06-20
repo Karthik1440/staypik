@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api';
-import { ArrowLeft, Plus, Trash2, Home, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Home, CheckCircle2, AlertCircle, Pencil } from 'lucide-react';
 
 export default function AddEditProperty() {
   const { id } = useParams();
@@ -32,6 +32,10 @@ export default function AddEditProperty() {
   const [occupiedBeds, setOccupiedBeds] = useState(0);
   const [monthlyRent, setMonthlyRent] = useState('');
   const [roomDeposit, setRoomDeposit] = useState('');
+  const [editingRoomId, setEditingRoomId] = useState(null);
+  const [furnishing, setFurnishing] = useState('Semi-Furnished');
+  const [bathroom, setBathroom] = useState('1');
+  const [balcony, setBalcony] = useState('0');
 
   // Page States
   const [loading, setLoading] = useState(false);
@@ -66,6 +70,9 @@ export default function AddEditProperty() {
       setExistingImages(prop.images || []);
       setLatitude(prop.latitude || '');
       setLongitude(prop.longitude || '');
+      if (prop.property_type === 'Apartment') {
+        setRoomType('1 BHK');
+      }
     } catch (e) {
       console.error(e);
       setError("Failed to load property details.");
@@ -183,38 +190,95 @@ export default function AddEditProperty() {
     }
   };
 
-  const handleAddRoom = async (e) => {
+  const handleAddOrUpdateRoom = async (e) => {
     e.preventDefault();
     setError('');
     
     if (!roomNumber || !monthlyRent) {
-      alert("Room number and monthly rent are required.");
+      alert(`${propertyType === 'Apartment' ? 'Unit/Flat number' : 'Room number'} and monthly rent are required.`);
       return;
     }
 
+    const payload = {
+      room_number: roomNumber,
+      room_type: roomType,
+      total_beds: propertyType === 'Apartment' ? 1 : totalBeds,
+      occupied_beds: propertyType === 'Apartment' ? 0 : occupiedBeds,
+      monthly_rent: monthlyRent,
+      deposit: roomDeposit || 0,
+      furnishing: propertyType === 'Apartment' ? furnishing : '',
+      bathroom: propertyType === 'Apartment' ? bathroom : '',
+      balcony: propertyType === 'Apartment' ? balcony : ''
+    };
+
     try {
-      const res = await api.post(`/rentals/properties/${id}/rooms/`, {
-        room_number: roomNumber,
-        room_type: roomType,
-        total_beds: totalBeds,
-        occupied_beds: occupiedBeds,
-        monthly_rent: monthlyRent,
-        deposit: roomDeposit || 0
-      });
-      setRooms([...rooms, res.data]);
+      if (editingRoomId) {
+        const res = await api.put(`/rentals/properties/${id}/rooms/${editingRoomId}/`, payload);
+        setRooms(rooms.map(r => r.id === editingRoomId ? res.data : r));
+        setSuccess("Room/Unit updated successfully!");
+        setEditingRoomId(null);
+      } else {
+        const res = await api.post(`/rentals/properties/${id}/rooms/`, payload);
+        setRooms([...rooms, res.data]);
+        setSuccess("Room/Unit added successfully!");
+      }
       
       // Reset room form
       setRoomNumber('');
-      setRoomType('Single');
+      setRoomType(propertyType === 'Apartment' ? '1 BHK' : 'Single');
       setTotalBeds(1);
       setOccupiedBeds(0);
       setMonthlyRent('');
       setRoomDeposit('');
-      
-      setSuccess("Room added successfully!");
+      setFurnishing('Semi-Furnished');
+      setBathroom('1');
+      setBalcony('0');
     } catch (err) {
       console.error(err);
-      setError("Failed to register room. Ensure room number is unique.");
+      setError(err.response?.data?.detail || `Failed to save room/unit. Ensure the room/flat number is unique.`);
+    }
+  };
+
+  const handleEditClick = (room) => {
+    setEditingRoomId(room.id);
+    setRoomNumber(room.room_number);
+    setRoomType(room.room_type);
+    setTotalBeds(room.total_beds || 1);
+    setOccupiedBeds(room.occupied_beds || 0);
+    setMonthlyRent(room.monthly_rent);
+    setRoomDeposit(room.deposit || '');
+    setFurnishing(room.furnishing || 'Semi-Furnished');
+    setBathroom(room.bathroom || '1');
+    setBalcony(room.balcony || '0');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingRoomId(null);
+    setRoomNumber('');
+    setRoomType(propertyType === 'Apartment' ? '1 BHK' : 'Single');
+    setTotalBeds(1);
+    setOccupiedBeds(0);
+    setMonthlyRent('');
+    setRoomDeposit('');
+    setFurnishing('Semi-Furnished');
+    setBathroom('1');
+    setBalcony('0');
+  };
+
+  const handleDeleteRoom = async (roomId) => {
+    if (!window.confirm("Are you sure you want to delete this room/unit?")) return;
+    setError('');
+    setSuccess('');
+    try {
+      await api.delete(`/rentals/properties/${id}/rooms/${roomId}/`);
+      setRooms(rooms.filter(r => r.id !== roomId));
+      setSuccess("Room/Unit deleted successfully!");
+      if (editingRoomId === roomId) {
+        handleCancelEdit();
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Failed to delete room.");
     }
   };
 
@@ -274,7 +338,15 @@ export default function AddEditProperty() {
                   <select
                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
                     value={propertyType}
-                    onChange={(e) => setPropertyType(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setPropertyType(val);
+                      if (val === 'Apartment') {
+                        setRoomType('1 BHK');
+                      } else {
+                        setRoomType('Single');
+                      }
+                    }}
                   >
                     <option value="PG">PG</option>
                     <option value="Hostel">Hostel</option>
@@ -500,93 +572,174 @@ export default function AddEditProperty() {
               <div>
                 <h3 className="text-lg font-black text-slate-800 flex items-center">
                   <Home size={18} className="text-amber-700 mr-2" />
-                  <span>Configure Rooms</span>
+                  <span>{editingRoomId ? 'Edit Room / Unit' : 'Configure Rooms'}</span>
                 </h3>
-                <p className="text-xs font-semibold text-slate-400 mt-1">Define specific PG room types, bed vacancy lists and monthly rents</p>
+                <p className="text-xs font-semibold text-slate-400 mt-1">
+                  {propertyType === 'Apartment' 
+                    ? "Define flat units, configuration types, furnishing and rent" 
+                    : "Define specific PG room types, bed vacancy lists and monthly rents"}
+                </p>
               </div>
 
-              {/* Add Room Mini Form */}
-              <form onSubmit={handleAddRoom} className="space-y-4 pt-4 border-t border-slate-50">
+              {/* Add/Edit Room Mini Form */}
+              <form onSubmit={handleAddOrUpdateRoom} className="space-y-4 pt-4 border-t border-slate-50">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Room Number</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                    {propertyType === 'Apartment' ? 'Flat/Unit Number' : 'Room Number'}
+                  </label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. 101"
+                    placeholder={propertyType === 'Apartment' ? "e.g. 302" : "e.g. 101"}
                     className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
                     value={roomNumber}
                     onChange={(e) => setRoomNumber(e.target.value)}
                   />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Room Type</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                      {propertyType === 'Apartment' ? 'BHK Type' : 'Room Type'}
+                    </label>
                     <select
                       className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
                       value={roomType}
                       onChange={(e) => setRoomType(e.target.value)}
                     >
-                      <option value="Single">Single</option>
-                      <option value="Double Sharing">Double Sharing</option>
-                      <option value="Triple Sharing">Triple Sharing</option>
-                      <option value="Quad Sharing">Quad Sharing</option>
+                      {propertyType === 'Apartment' ? (
+                        <>
+                          <option value="1 BHK">1 BHK</option>
+                          <option value="2 BHK">2 BHK</option>
+                          <option value="3 BHK">3 BHK</option>
+                          <option value="4 BHK">4 BHK</option>
+                          <option value="1 RK">1 RK</option>
+                          <option value="Studio">Studio</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="Single">Single</option>
+                          <option value="Double Sharing">Double Sharing</option>
+                          <option value="Triple Sharing">Triple Sharing</option>
+                          <option value="Quad Sharing">Quad Sharing</option>
+                        </>
+                      )}
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Monthly Rent (₹)</label>
-                    <input
-                      type="number"
-                      required
-                      placeholder="e.g. 9000"
-                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
-                      value={monthlyRent}
-                      onChange={(e) => setMonthlyRent(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Security Deposit (₹)</label>
-                    <input
-                      type="number"
-                      placeholder="e.g. 15000"
-                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
-                      value={roomDeposit}
-                      onChange={(e) => setRoomDeposit(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Total Beds</label>
-                    <input
-                      type="number"
-                      min={1}
-                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
-                      value={totalBeds}
-                      onChange={(e) => setTotalBeds(parseInt(e.target.value))}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Occupied Beds</label>
-                    <input
-                      type="number"
-                      min={0}
-                      max={totalBeds}
-                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
-                      value={occupiedBeds}
-                      onChange={(e) => setOccupiedBeds(parseInt(e.target.value))}
-                    />
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Monthly Rent (₹)</label>
+                      <input
+                        type="number"
+                        required
+                        placeholder="e.g. 9000"
+                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
+                        value={monthlyRent}
+                        onChange={(e) => setMonthlyRent(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Security Deposit (₹)</label>
+                      <input
+                        type="number"
+                        placeholder="e.g. 15000"
+                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
+                        value={roomDeposit}
+                        onChange={(e) => setRoomDeposit(e.target.value)}
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <button
-                  type="submit"
-                  className="w-full py-2.5 bg-slate-900 hover:bg-black text-white rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center space-x-1.5"
-                >
-                  <Plus size={14} />
-                  <span>Add Room</span>
-                </button>
+                {propertyType === 'Apartment' ? (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Furnishing</label>
+                      <select
+                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
+                        value={furnishing}
+                        onChange={(e) => setFurnishing(e.target.value)}
+                      >
+                        <option value="Fully Furnished">Fully Furnished</option>
+                        <option value="Semi-Furnished">Semi-Furnished</option>
+                        <option value="Unfurnished">Unfurnished</option>
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Bathroom</label>
+                        <select
+                          className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
+                          value={bathroom}
+                          onChange={(e) => setBathroom(e.target.value)}
+                        >
+                          <option value="1">1</option>
+                          <option value="2">2</option>
+                          <option value="3">3</option>
+                          <option value="Shared">Shared</option>
+                          <option value="Attached">Attached</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Balcony</label>
+                        <select
+                          className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
+                          value={balcony}
+                          onChange={(e) => setBalcony(e.target.value)}
+                        >
+                          <option value="0">0</option>
+                          <option value="1">1</option>
+                          <option value="2">2</option>
+                          <option value="3+">3+</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Total Beds</label>
+                      <input
+                        type="number"
+                        min={1}
+                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
+                        value={totalBeds}
+                        onChange={(e) => setTotalBeds(parseInt(e.target.value))}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Occupied Beds</label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={totalBeds}
+                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
+                        value={occupiedBeds}
+                        onChange={(e) => setOccupiedBeds(parseInt(e.target.value))}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex space-x-2">
+                  {editingRoomId && (
+                    <button
+                      type="button"
+                      onClick={handleCancelEdit}
+                      className="flex-1 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 rounded-xl text-xs font-bold transition flex items-center justify-center"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    className="flex-1 py-2.5 bg-slate-900 hover:bg-black text-white rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center space-x-1.5"
+                  >
+                    <Plus size={14} />
+                    <span>{editingRoomId ? 'Update Room/Unit' : 'Add Room/Unit'}</span>
+                  </button>
+                </div>
               </form>
 
               {/* Room Config List */}
@@ -597,16 +750,48 @@ export default function AddEditProperty() {
                 ) : (
                   <div className="space-y-2.5">
                     {rooms.map((room, idx) => (
-                      <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
-                        <div>
-                          <div className="text-sm font-extrabold text-slate-800">Room {room.room_number}</div>
-                          <div className="text-[10px] text-slate-400 font-bold">
-                            {room.room_type} • Vacant: {room.total_beds - room.occupied_beds}/{room.total_beds}
+                      <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-amber-200 transition group relative">
+                        <div className="min-w-0 pr-8">
+                          <div className="text-sm font-extrabold text-slate-800">
+                            {propertyType === 'Apartment' ? `Flat/Unit ${room.room_number}` : `Room ${room.room_number}`}
+                          </div>
+                          <div className="text-[10px] text-slate-400 font-bold leading-normal">
+                            {room.room_type}
+                            {propertyType === 'Apartment' ? (
+                              <>
+                                {room.furnishing && ` • ${room.furnishing}`}
+                                {room.bathroom && ` • ${room.bathroom} Bath`}
+                                {room.balcony && ` • ${room.balcony} Balcony`}
+                              </>
+                            ) : (
+                              ` • Vacant: ${room.total_beds - room.occupied_beds}/${room.total_beds}`
+                            )}
                             {room.deposit > 0 && ` • Deposit: ₹${Number(room.deposit).toLocaleString()}`}
                           </div>
                         </div>
-                        <div className="text-right">
-                          <span className="text-sm font-black text-amber-700">₹{Number(room.monthly_rent).toLocaleString()}<span className="text-[10px] font-bold text-slate-400">/mo</span></span>
+                        <div className="text-right flex items-center space-x-2">
+                          <div className="mr-2">
+                            <span className="text-sm font-black text-amber-700">₹{Number(room.monthly_rent).toLocaleString()}</span>
+                            <span className="text-[10px] font-bold text-slate-400">/mo</span>
+                          </div>
+                          <div className="flex space-x-1">
+                            <button
+                              type="button"
+                              onClick={() => handleEditClick(room)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-amber-700 hover:bg-amber-50 transition"
+                              title="Edit Room/Unit"
+                            >
+                              <Pencil size={12} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteRoom(room.id)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition"
+                              title="Delete Room/Unit"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}

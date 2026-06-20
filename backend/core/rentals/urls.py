@@ -25,6 +25,7 @@ urlpatterns = [
     path('rentals/properties/manage/<int:pk>/', PropertyManagementView.as_view(), name='property_edit_delete'),
     path('rentals/properties/manage/images/<int:pk>/', DeletePropertyImageView.as_view(), name='delete_property_image'),
     path('rentals/properties/<int:property_id>/rooms/', RoomManagementView.as_view(), name='room_add'),
+    path('rentals/properties/<int:property_id>/rooms/<int:pk>/', RoomManagementView.as_view(), name='room_edit_delete'),
     
     # Visit Bookings & History
     path('rentals/properties/<int:property_id>/visit/', BookVisitView.as_view(), name='book_visit'),

@@ -9,3 +9,5 @@ staticfiles/
 media/
 firebase-key.jsonbackend/core/core/firebase-key.json
 backend/core/core/firebase-key.json
+venv/
+backend/venv/

@@ -496,7 +496,7 @@ class DeletePropertyImageView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class RoomManagementView(APIView):
-    """POST: Owner adds room table metrics directly to property"""
+    """POST: Owner adds room table metrics directly to property. PUT/DELETE: Edit or delete rooms."""
     permission_classes = [IsApprovedOwner]
 
     def post(self, request, property_id):
@@ -508,6 +508,9 @@ class RoomManagementView(APIView):
         occupied_beds = int(request.data.get('occupied_beds', 0))
         monthly_rent = request.data.get('monthly_rent')
         deposit = request.data.get('deposit', 0)
+        furnishing = request.data.get('furnishing', '')
+        bathroom = request.data.get('bathroom', '')
+        balcony = request.data.get('balcony', '')
 
         if not all([room_number, room_type, monthly_rent]):
             return Response({'detail': 'room_number, room_type, and monthly_rent are required'}, status=status.HTTP_400_BAD_REQUEST)
@@ -519,7 +522,10 @@ class RoomManagementView(APIView):
             total_beds=total_beds,
             occupied_beds=occupied_beds,
             monthly_rent=monthly_rent,
-            deposit=deposit
+            deposit=deposit,
+            furnishing=furnishing,
+            bathroom=bathroom,
+            balcony=balcony
         )
 
         # Automatically adjust base_rent on property if it is 0
@@ -528,6 +534,46 @@ class RoomManagementView(APIView):
             prop.save()
 
         return Response(RoomSerializer(room).data, status=status.HTTP_201_CREATED)
+
+    def put(self, request, property_id, pk):
+        prop = get_object_or_404(Property, id=property_id, owner=request.user)
+        room = get_object_or_404(Room, id=pk, property=prop)
+        
+        room_number = request.data.get('room_number')
+        if room_number is not None: room.room_number = room_number
+        
+        room_type = request.data.get('room_type')
+        if room_type is not None: room.room_type = room_type
+        
+        total_beds = request.data.get('total_beds')
+        if total_beds is not None: room.total_beds = int(total_beds)
+        
+        occupied_beds = request.data.get('occupied_beds')
+        if occupied_beds is not None: room.occupied_beds = int(occupied_beds)
+        
+        monthly_rent = request.data.get('monthly_rent')
+        if monthly_rent is not None: room.monthly_rent = monthly_rent
+        
+        deposit = request.data.get('deposit')
+        if deposit is not None: room.deposit = deposit
+        
+        furnishing = request.data.get('furnishing')
+        if furnishing is not None: room.furnishing = furnishing
+        
+        bathroom = request.data.get('bathroom')
+        if bathroom is not None: room.bathroom = bathroom
+        
+        balcony = request.data.get('balcony')
+        if balcony is not None: room.balcony = balcony
+        
+        room.save()
+        return Response(RoomSerializer(room).data)
+
+    def delete(self, request, property_id, pk):
+        prop = get_object_or_404(Property, id=property_id, owner=request.user)
+        room = get_object_or_404(Room, id=pk, property=prop)
+        room.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 # ──────────────────────────────────────────────────────────
 # ── VISIT BOOKINGS VIEWS ──
