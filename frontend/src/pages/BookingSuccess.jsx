@@ -13,10 +13,27 @@ export default function BookingSuccess() {
     roomType: 'Single Sharing',
     bedName: 'Bed A',
     visitDate: '20 May 2026',
-    visitTime: '11:00 AM'
+    visitTime: '11:00 AM',
+    ownerName: 'Owner',
+    ownerPhone: ''
   };
 
-  const whatsAppLink = `https://wa.me/919876543210?text=Hi, my visit to ${bookingState.pgName} is scheduled for ${bookingState.visitDate} at ${bookingState.visitTime}. Booking ID: ${bookingState.bookingId}.`;
+  const ownerName = bookingState.ownerName || 'Owner';
+  const ownerPhone = bookingState.ownerPhone || '';
+  let cleanedPhone = '';
+  
+  if (ownerPhone) {
+    cleanedPhone = ownerPhone.replace(/\D/g, '');
+    if (cleanedPhone.length === 10) {
+      cleanedPhone = '91' + cleanedPhone;
+    }
+  }
+
+  const whatsAppLink = cleanedPhone
+    ? `https://wa.me/${cleanedPhone}?text=${encodeURIComponent(
+        `Hi ${ownerName}, my visit to ${bookingState.pgName} is scheduled for ${bookingState.visitDate} at ${bookingState.visitTime}. Booking ID: ${bookingState.bookingId}.`
+      )}`
+    : null;
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(bookingState.bookingId);
@@ -129,15 +146,17 @@ export default function BookingSuccess() {
 
         {/* Footer Actions */}
         <div className="space-y-3 pt-2">
-          <a 
-            href={whatsAppLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full py-3.5 rounded-2xl bg-emerald-700 text-white hover:bg-emerald-800 text-xs font-black shadow-md transition flex items-center justify-center space-x-2"
-          >
-            <MessageCircle size={16} />
-            <span>Chat on WhatsApp</span>
-          </a>
+          {whatsAppLink && (
+            <a 
+              href={whatsAppLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-3.5 rounded-2xl bg-emerald-700 text-white hover:bg-emerald-800 text-xs font-black shadow-md transition flex items-center justify-center space-x-2"
+            >
+              <MessageCircle size={16} />
+              <span>Chat on WhatsApp</span>
+            </a>
+          )}
 
           <button 
             onClick={() => navigate('/')}

@@ -106,7 +106,9 @@ export default function VisitBooking() {
             : 'PG Room',
           bedName: selectedBed,
           visitDate: visitDate,
-          visitTime: visitTime
+          visitTime: visitTime,
+          ownerPhone: property.owner_phone,
+          ownerName: property.owner_name
         }
       });
     } catch (err) {

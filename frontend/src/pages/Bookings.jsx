@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../api';
-import { Calendar, MapPin, Clock, Phone, CheckCircle, Clock3, XCircle, Home, User } from 'lucide-react';
+import { Calendar, MapPin, Clock, Phone, CheckCircle, Clock3, XCircle, Home, User, MessageCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Bookings() {
@@ -42,6 +42,33 @@ export default function Bookings() {
     } catch (err) {
       console.error("Failed to clear visit request:", err);
       alert(err.response?.data?.detail || "Failed to clear visit request.");
+    }
+  };
+
+  const handleWhatsAppChat = async (visit) => {
+    try {
+      const res = await api.get(`/rentals/properties/${visit.property}/`);
+      const propertyData = res.data;
+      
+      const ownerName = propertyData.owner_name || 'Owner';
+      let ownerPhone = propertyData.owner_phone || '';
+      
+      let cleanedPhone = ownerPhone.replace(/\D/g, '');
+      if (cleanedPhone.length === 10) {
+        cleanedPhone = '91' + cleanedPhone;
+      }
+      
+      const pgName = propertyData.name || visit.property_name;
+      const visitDate = visit.visit_date;
+      const visitTime = visit.visit_time || '';
+      const bookingId = visit.id;
+      
+      const message = `Hi ${ownerName}, my visit to ${pgName} is approved for ${visitDate} at ${visitTime}. Booking ID: ${bookingId}.`;
+      const whatsappUrl = `https://wa.me/${cleanedPhone}?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+    } catch (err) {
+      console.error("Failed to fetch property details for WhatsApp chat:", err);
+      alert("Could not retrieve owner contact details. Please try again.");
     }
   };
 
@@ -178,12 +205,23 @@ export default function Bookings() {
                   )}
 
                   {user && user.email === visit.user_email && (visit.status === 'PENDING' || visit.status === 'APPROVED') && (
-                    <button
-                      onClick={() => handleUpdateStatus(visit.id, 'CANCELLED')}
-                      className="px-2.5 py-1 text-[11px] font-bold bg-red-50 text-red-700 border border-red-100 rounded-lg hover:bg-red-100 transition"
-                    >
-                      Cancel
-                    </button>
+                    <>
+                      {visit.status === 'APPROVED' && (
+                        <button
+                          onClick={() => handleWhatsAppChat(visit)}
+                          className="px-2.5 py-1 text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-lg hover:bg-emerald-100 transition flex items-center gap-1"
+                        >
+                          <MessageCircle size={12} />
+                          <span>WhatsApp Owner</span>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleUpdateStatus(visit.id, 'CANCELLED')}
+                        className="px-2.5 py-1 text-[11px] font-bold bg-red-50 text-red-700 border border-red-100 rounded-lg hover:bg-red-100 transition"
+                      >
+                        Cancel
+                      </button>
+                    </>
                   )}
 
                   {/* Clear option for Cancelled or Completed bookings */}
