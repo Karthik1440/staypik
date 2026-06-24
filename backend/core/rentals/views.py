@@ -636,6 +636,14 @@ class BookVisitView(APIView):
             notification_type='info'
         )
 
+        # Create user notification targeted to the guest
+        GlobalNotification.objects.create(
+            user=request.user,
+            title=f"Visit Scheduled: {prop.name}",
+            message=f"Your visit to {prop.name} has been requested for {visit_date} at {visit_time or 'specified time'}.",
+            notification_type='info'
+        )
+
         return Response(VisitRequestSerializer(visit).data, status=status.HTTP_201_CREATED)
 
 class BookingsHistoryView(APIView):
@@ -670,6 +678,33 @@ class UpdateVisitStatusView(APIView):
         
         visit.status = new_status
         visit.save()
+
+        # Notify users of the visit request status update
+        if new_status == 'CANCELLED':
+            if request.user == visit.user:
+                # Guest cancelled -> notify owner
+                GlobalNotification.objects.create(
+                    user=visit.property.owner,
+                    title=f"Visit Cancelled: {visit.property.name}",
+                    message=f"Guest ({visit.user.email}) has cancelled their visit request scheduled for {visit.visit_date}.",
+                    notification_type='alert'
+                )
+            else:
+                # Owner cancelled -> notify guest
+                GlobalNotification.objects.create(
+                    user=visit.user,
+                    title=f"Visit Cancelled: {visit.property.name}",
+                    message=f"The host has cancelled your visit request scheduled for {visit.visit_date}.",
+                    notification_type='alert'
+                )
+        else:
+            # For APPROVED or COMPLETED -> notify guest
+            GlobalNotification.objects.create(
+                user=visit.user,
+                title=f"Visit Request Update: {visit.property.name}",
+                message=f"Your visit request for {visit.property.name} scheduled for {visit.visit_date} has been {new_status.lower()}.",
+                notification_type='update'
+            )
         
         return Response(VisitRequestSerializer(visit).data)
 
@@ -849,6 +884,14 @@ class ComplaintListView(APIView):
             status='OPEN'
         )
 
+        # Notify the property owner of a new complaint
+        GlobalNotification.objects.create(
+            user=tenancy.property.owner,
+            title=f"New Complaint Filed: {title}",
+            message=f"Tenant {tenancy.tenant_name} (Room {tenancy.room.room_number if tenancy.room else 'N/A'}) filed a complaint: {description[:100]}...",
+            notification_type='alert'
+        )
+
         return Response(ComplaintSerializer(complaint).data, status=status.HTTP_201_CREATED)
 
     def patch(self, request, pk):
@@ -863,6 +906,15 @@ class ComplaintListView(APIView):
         if new_status in ['OPEN', 'IN_PROGRESS', 'RESOLVED']:
             complaint.status = new_status
             complaint.save()
+
+            # Notify the tenant of the complaint status update if the tenant has a user account linked
+            if complaint.tenant.user:
+                GlobalNotification.objects.create(
+                    user=complaint.tenant.user,
+                    title=f"Complaint Update: {complaint.title}",
+                    message=f"The status of your complaint has been updated to: {new_status}.",
+                    notification_type='update'
+                )
 
         return Response(ComplaintSerializer(complaint).data)
 
@@ -900,6 +952,15 @@ class RentPaymentListView(APIView):
             import datetime
             payment.payment_date = timezone.now().date()
             payment.save()
+
+            # Notify the tenant of the payment confirmation
+            if not already_paid and payment.tenant.user:
+                GlobalNotification.objects.create(
+                    user=payment.tenant.user,
+                    title="Rent Payment Confirmed",
+                    message=f"Your rent payment of ₹{payment.amount} due on {payment.due_date} has been marked as PAID.",
+                    notification_type='update'
+                )
             
             if not already_paid:
                 # Automatically create a new unpaid RentPayment for next month on same day

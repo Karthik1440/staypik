@@ -5,10 +5,11 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 django.setup()
 
 from django.utils import timezone
-from rentals.models import User, OwnerProfile, Property, PropertyImage, Room, VisitRequest, Tenant, Complaint, RentPayment
+from rentals.models import User, OwnerProfile, Property, PropertyImage, Room, VisitRequest, Tenant, Complaint, RentPayment, GlobalNotification
 
 def seed():
     print("Clearing old data...")
+    GlobalNotification.objects.all().delete()
     RentPayment.objects.all().delete()
     Complaint.objects.all().delete()
     Tenant.objects.all().delete()
@@ -268,6 +269,30 @@ def seed():
         amount=12000.00,
         due_date=timezone.now().date(),
         status="UNPAID"
+    )
+
+    print("Creating notifications...")
+    # Global notification for everyone
+    GlobalNotification.objects.create(
+        title="Welcome to Staypik!",
+        message="Find premium PG, Hostels, and Co-Living spaces directly from owners with zero hidden charges.",
+        notification_type="info"
+    )
+
+    # Owner notification
+    GlobalNotification.objects.create(
+        user=owner,
+        title="Owner Onboarding Complete",
+        message="Welcome to Staypik Ramesh! Your owner profile is approved and you can now manage your properties, add rooms, and track rent payments.",
+        notification_type="update"
+    )
+
+    # Guest notification
+    GlobalNotification.objects.create(
+        user=tenant_user,
+        title="Schedule Your First Visit",
+        message="Explore properties in Indiranagar, HSR Layout, or Koramangala and schedule a visit free of charge.",
+        notification_type="promo"
     )
 
     print("Seeding finished successfully!")
