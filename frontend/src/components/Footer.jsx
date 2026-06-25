@@ -91,14 +91,7 @@ export default function Footer() {
                 <Mail size={14} className="text-amber-500 flex-shrink-0" />
                 <span className="truncate">support@staypik.com</span>
               </li>
-              <li className="flex items-center space-x-2.5">
-                <Phone size={14} className="text-amber-500 flex-shrink-0" />
-                <span></span>
-              </li>
-              <li className="flex items-center space-x-2.5">
-                <MapPin size={14} className="text-amber-500 flex-shrink-0" />
-                <span></span>
-              </li>
+
             </ul>
           </div>
 
@@ -119,7 +112,6 @@ export default function Footer() {
             <span>•</span>
             <span className="flex items-center space-x-1">
               <span></span>
-              <Heart size={10} className="text-amber-500 fill-amber-500 animate-pulse" />
               <span></span>
             </span>
           </div>
