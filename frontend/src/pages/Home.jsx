@@ -114,7 +114,7 @@ export default function Home() {
         params.push(`lat=${userCoords.latitude}`);
         params.push(`lng=${userCoords.longitude}`);
       }
-      
+
       if (params.length > 0) {
         url += `?${params.join('&')}`;
       }
@@ -204,7 +204,7 @@ export default function Home() {
               <span>Hi, Welcome {user ? (user.displayName || user.email.split('@')[0]) : 'Guest'}</span>
               <Sparkles size={16} className="text-amber-500 ml-1.5 animate-pulse" />
             </h1>
-            <p className="text-xs font-bold text-slate-400 mt-0.5">Explore premium PGs & Co-living spaces</p>
+            <p className="text-xs font-bold text-slate-400 mt-0.5">Explore PGs & Co-living spaces</p>
           </div>
         </div>
         {/* Pill Search Input */}
@@ -220,25 +220,23 @@ export default function Home() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <button 
+          <button
             onClick={handleLocationToggle}
             disabled={locLoading}
-            className={`p-3 rounded-full border shadow-sm transition flex items-center justify-center ${
-              useGeoLocation 
-                ? 'bg-emerald-600 text-white border-emerald-600' 
+            className={`p-3 rounded-full border shadow-sm transition flex items-center justify-center ${useGeoLocation
+                ? 'bg-emerald-600 text-white border-emerald-600'
                 : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'
-            }`}
+              }`}
             title="Find PGs Near Me"
           >
             <Locate size={18} className={locLoading ? "animate-spin" : ""} />
           </button>
-          <button 
+          <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`p-3 rounded-full border shadow-sm transition ${
-              showFilters 
-                ? 'bg-amber-700 text-white border-amber-700' 
+            className={`p-3 rounded-full border shadow-sm transition ${showFilters
+                ? 'bg-amber-700 text-white border-amber-700'
                 : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'
-            }`}
+              }`}
           >
             <SlidersHorizontal size={18} />
           </button>
@@ -249,7 +247,7 @@ export default function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-white text-slate-800 p-5 rounded-2xl shadow-lg text-left animate-scaleIn origin-top border border-slate-100">
             <div>
               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Gender</label>
-              <select 
+              <select
                 className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none"
                 value={selectedGender}
                 onChange={(e) => setSelectedGender(e.target.value)}
@@ -263,7 +261,7 @@ export default function Home() {
 
             <div>
               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Locality</label>
-              <select 
+              <select
                 className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none"
                 value={selectedLocality}
                 onChange={(e) => setSelectedLocality(e.target.value)}
@@ -277,7 +275,7 @@ export default function Home() {
 
             <div>
               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Sharing Type</label>
-              <select 
+              <select
                 className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none"
                 value={selectedSharing}
                 onChange={(e) => setSelectedSharing(e.target.value)}
@@ -292,7 +290,7 @@ export default function Home() {
 
             <div>
               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Max Budget (₹/mo)</label>
-              <input 
+              <input
                 type="number"
                 placeholder="e.g. 10000"
                 className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none"
@@ -318,11 +316,10 @@ export default function Home() {
           <button
             key={cat.name}
             onClick={() => setSelectedCategory(cat.value)}
-            className={`px-5 py-2.5 rounded-full text-xs font-bold border flex-shrink-0 transition ${
-              selectedCategory === cat.value
+            className={`px-5 py-2.5 rounded-full text-xs font-bold border flex-shrink-0 transition ${selectedCategory === cat.value
                 ? 'bg-amber-700 text-white border-amber-700 shadow-sm'
                 : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'
-            }`}
+              }`}
           >
             {cat.name}
           </button>
@@ -343,7 +340,7 @@ export default function Home() {
         ];
         const activeBanners = heroBanners.length > 0 ? heroBanners : fallbackBanners;
         const activeBanner = activeBanners[currentSlide] || activeBanners[0];
-        
+
         const renderTitle = (title) => {
           if (!title) return '';
           const highlightText1 = "Direct Owner Contact";
@@ -400,14 +397,14 @@ export default function Home() {
           const base = api.defaults.baseURL ? api.defaults.baseURL.replace('/api', '') : '';
           return `${base}/${banner.image.replace(/^\//, '')}`;
         };
-        
+
         const getLocalitiesList = (banner) => {
           if (!banner || !banner.localities) {
             return ['HSR Layout', 'Koramangala', 'BTM Layout', 'Whitefield', 'Electronic City'];
           }
           return banner.localities.split(',').map(item => item.trim()).filter(item => item.length > 0);
         };
-        
+
         return (
           <div className="space-y-4">
             <div className="bg-gradient-to-r from-[#FFFDF9] via-[#FFF9EE] to-[#FFF3DE] rounded-[32px] border border-[#EFE5D9] shadow-sm relative overflow-hidden flex flex-col md:flex-row items-stretch min-h-[380px] md:h-[420px] transition duration-500 text-left">
@@ -471,7 +468,7 @@ export default function Home() {
 
                 {/* Button Action */}
                 <div className="pt-2">
-                  <button 
+                  <button
                     onClick={handleBannerClick}
                     className="px-6 py-3.5 bg-[#D97706] hover:bg-[#B45309] text-white text-sm font-black rounded-2xl flex items-center space-x-2 shadow-lg shadow-amber-700/20 transition duration-150 active:scale-95"
                   >
@@ -483,9 +480,9 @@ export default function Home() {
 
               {/* Right Image Column (with curved overlay clip) */}
               <div className="relative w-full md:w-[45%] h-64 md:h-auto flex-shrink-0 overflow-hidden select-none">
-                <img 
-                  src={getBannerImageUrl(activeBanner)} 
-                  alt={activeBanner.title} 
+                <img
+                  src={getBannerImageUrl(activeBanner)}
+                  alt={activeBanner.title}
                   className="w-full h-full object-cover transition duration-500 clip-curved-left"
                 />
 
@@ -526,9 +523,8 @@ export default function Home() {
                   <button
                     key={idx}
                     onClick={() => setCurrentSlide(idx)}
-                    className={`h-2 rounded-full transition-all duration-300 ${
-                      currentSlide === idx ? 'w-6 bg-[#D97706]' : 'w-2 bg-slate-200'
-                    }`}
+                    className={`h-2 rounded-full transition-all duration-300 ${currentSlide === idx ? 'w-6 bg-[#D97706]' : 'w-2 bg-slate-200'
+                      }`}
                   />
                 ))}
               </div>
@@ -555,7 +551,7 @@ export default function Home() {
                 <h2 className="text-base font-black text-slate-800 tracking-tight text-left">
                   {search.trim() !== '' ? 'Search Results' : 'All Properties'}
                 </h2>
-                <button 
+                <button
                   onClick={() => {
                     setViewAll(false);
                     setSearch('');
@@ -564,7 +560,7 @@ export default function Home() {
                     setSelectedLocality('');
                     setMaxRent('');
                     setSelectedSharing('');
-                  }} 
+                  }}
                   className="text-xs font-bold text-amber-700 hover:underline"
                 >
                   Back to home
@@ -573,14 +569,14 @@ export default function Home() {
 
               <div className="space-y-6">
                 {filteredProperties.map(p => (
-                  <div 
+                  <div
                     key={p.id}
                     onClick={() => navigate(`/property/${p.id}${selectedSharing ? `?sharing=${encodeURIComponent(selectedSharing)}` : ''}`)}
                     className="w-full bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 cursor-pointer group"
                   >
                     <div className="relative aspect-[16/10] w-full bg-slate-50">
-                      <img 
-                        src={p.images && p.images.length > 0 ? p.images[0].image : 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=500&q=80'} 
+                      <img
+                        src={p.images && p.images.length > 0 ? p.images[0].image : 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=500&q=80'}
                         alt={p.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                       />
@@ -591,7 +587,7 @@ export default function Home() {
                           </span>
                         </div>
                       )}
-                      <button 
+                      <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); toggleFavorite(p.id); }}
                         className="absolute top-3.5 right-3.5 p-2 rounded-full bg-white/85 backdrop-blur-sm text-slate-400 hover:text-red-500 shadow-sm transition"
@@ -620,7 +616,7 @@ export default function Home() {
                           </span>
                         )}
                       </p>
- 
+
                       <div className="flex items-center justify-between pt-3 border-t border-slate-50">
                         <div>
                           <div className="flex items-baseline">
@@ -650,25 +646,25 @@ export default function Home() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-baseline">
                     <h2 className="text-base font-black text-slate-800 tracking-tight text-left">Featured Listings</h2>
-                    <button 
-                      onClick={() => setViewAll(true)} 
+                    <button
+                      onClick={() => setViewAll(true)}
                       className="text-xs font-bold text-slate-400 hover:text-slate-600"
                     >
                       View all
                     </button>
                   </div>
-                  
+
                   <div className="flex space-x-4 overflow-x-auto pb-4 -mx-4 px-4 hide-scrollbar">
                     {featuredProperties.map(p => (
-                      <div 
+                      <div
                         key={p.id}
                         onClick={() => navigate(`/property/${p.id}${selectedSharing ? `?sharing=${encodeURIComponent(selectedSharing)}` : ''}`)}
                         className="w-80 bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 flex-shrink-0 cursor-pointer group flex flex-col h-full"
                       >
                         {/* Thumbnail */}
                         <div className="relative aspect-[4/3] w-full bg-slate-50 overflow-hidden">
-                          <img 
-                            src={p.images && p.images.length > 0 ? p.images[0].image : 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=500&q=80'} 
+                          <img
+                            src={p.images && p.images.length > 0 ? p.images[0].image : 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=500&q=80'}
                             alt={p.name}
                             className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                           />
@@ -676,7 +672,7 @@ export default function Home() {
                             <Star size={10} className="fill-[#D97706] text-[#D97706]" />
                             <span>FEATURED</span>
                           </div>
-                          <button 
+                          <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); toggleFavorite(p.id); }}
                             className="absolute top-3 right-3 p-1.5 rounded-full bg-white/90 backdrop-blur-sm text-slate-400 hover:text-red-500 shadow-sm transition active:scale-95 flex items-center justify-center z-10"
@@ -737,7 +733,7 @@ export default function Home() {
                                 )}
                               </div>
                             </div>
-                            <button 
+                            <button
                               type="button"
                               className="w-full mt-3 py-2 bg-[#D97706] hover:bg-[#B45309] text-white text-xs font-black rounded-xl transition duration-150 active:scale-[0.98] shadow-sm flex items-center justify-center"
                             >
@@ -756,8 +752,8 @@ export default function Home() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-baseline">
                     <h2 className="text-base font-black text-slate-800 tracking-tight text-left">Nearby PGs</h2>
-                    <button 
-                      onClick={() => setViewAll(true)} 
+                    <button
+                      onClick={() => setViewAll(true)}
                       className="text-xs font-bold text-slate-400 hover:text-slate-600"
                     >
                       View all
@@ -766,18 +762,18 @@ export default function Home() {
 
                   <div className="space-y-3.5">
                     {nearbyProperties.map(p => (
-                      <div 
+                      <div
                         key={p.id}
                         onClick={() => navigate(`/property/${p.id}${selectedSharing ? `?sharing=${encodeURIComponent(selectedSharing)}` : ''}`)}
                         className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm flex space-x-3.5 cursor-pointer hover:shadow-md transition duration-300 group text-left"
                       >
                         <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-xl overflow-hidden bg-slate-50 flex-shrink-0">
-                          <img 
-                            src={p.images && p.images.length > 0 ? p.images[0].image : 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=500&q=80'} 
+                          <img
+                            src={p.images && p.images.length > 0 ? p.images[0].image : 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=500&q=80'}
                             alt={p.name}
                             className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                           />
-                          <button 
+                          <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); toggleFavorite(p.id); }}
                             className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 backdrop-blur-sm text-slate-400 hover:text-red-500 shadow-sm transition active:scale-95 flex items-center justify-center z-10"
@@ -820,7 +816,7 @@ export default function Home() {
                               ))}
                             </div>
                           </div>
-                          
+
                           <div className="flex justify-between items-end pt-2 border-t border-slate-50">
                             <div className="text-left">
                               <div className="flex items-baseline leading-none">
@@ -833,7 +829,7 @@ export default function Home() {
                                 </div>
                               )}
                             </div>
-                            
+
                             <button
                               type="button"
                               className="px-3.5 py-1.5 border border-[#D97706] text-[#D97706] hover:bg-amber-50/50 bg-white text-[11px] font-black rounded-lg transition active:scale-95"

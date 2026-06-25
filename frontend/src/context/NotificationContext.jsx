@@ -1,10 +1,12 @@
 // src/context/NotificationContext.js
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api from '../api';
+import { useAuth } from './AuthContext';
 
 const NotificationContext = createContext();
 
 export function NotificationProvider({ children }) {
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   
@@ -57,7 +59,7 @@ export function NotificationProvider({ children }) {
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [fetchNotifications, fetchBanner]);
+  }, [user, fetchNotifications, fetchBanner]);
 
   const markAllRead = useCallback(() => {
     setNotifications(prev => {

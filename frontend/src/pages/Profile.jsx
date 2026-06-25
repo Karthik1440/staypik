@@ -60,10 +60,6 @@ export default function Profile() {
       setProfileError("Please select a valid image file.");
       return;
     }
-    if (file.size > 3 * 1024 * 1024) {
-      setProfileError("Image size must be smaller than 3MB.");
-      return;
-    }
 
     const formData = new FormData();
     formData.append('avatar', file);
