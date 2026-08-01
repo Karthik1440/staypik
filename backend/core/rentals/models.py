@@ -16,7 +16,7 @@ class OwnerProfile(models.Model):
     mobile_number = models.CharField(max_length=20)
     city = models.CharField(max_length=100)
     address = models.TextField()
-    is_approved = models.BooleanField(default=False)
+    is_approved = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

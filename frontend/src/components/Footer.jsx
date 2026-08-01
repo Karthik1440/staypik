@@ -142,7 +142,7 @@ export default function Footer() {
 
         {/* Contact info */}
         <div className="text-[9px] font-semibold text-slate-500">
-          <span>support@staypik.com </span>
+          <span>staypikofficial@gmail.com</span>
         </div>
 
         <div className="text-[9px] font-bold text-slate-500 pt-3 border-t border-slate-800/60 max-w-xs mx-auto">

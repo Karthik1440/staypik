@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../api';
-import { Calendar, MapPin, Clock, Phone, CheckCircle, Clock3, XCircle, Home, User, MessageCircle } from 'lucide-react';
+import { Calendar, MapPin, Clock, Phone, CheckCircle, Clock3, XCircle, Home, User, MessageCircle, Navigation } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Bookings() {
@@ -43,6 +43,19 @@ export default function Bookings() {
       console.error("Failed to clear visit request:", err);
       alert(err.response?.data?.detail || "Failed to clear visit request.");
     }
+  };
+
+  const handleNavigateMap = (visit) => {
+    let mapUrl = '';
+    if (visit.property_latitude && visit.property_longitude) {
+      mapUrl = `https://www.google.com/maps/search/?api=1&query=${visit.property_latitude},${visit.property_longitude}`;
+    } else {
+      const fullAddress = [visit.property_name, visit.property_address, visit.property_locality, visit.property_city]
+        .filter(Boolean)
+        .join(', ');
+      mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
+    }
+    window.open(mapUrl, '_blank');
   };
 
   const handleWhatsAppChat = async (visit) => {
@@ -207,13 +220,23 @@ export default function Bookings() {
                   {user && user.email === visit.user_email && (visit.status === 'PENDING' || visit.status === 'APPROVED') && (
                     <>
                       {visit.status === 'APPROVED' && (
-                        <button
-                          onClick={() => handleWhatsAppChat(visit)}
-                          className="px-2.5 py-1 text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-lg hover:bg-emerald-100 transition flex items-center gap-1"
-                        >
-                          <MessageCircle size={12} />
-                          <span>WhatsApp Owner</span>
-                        </button>
+                        <>
+                          <button
+                            onClick={() => handleNavigateMap(visit)}
+                            className="px-2.5 py-1 text-[11px] font-bold bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition flex items-center gap-1 shadow-sm"
+                            title="Navigate to property on Google Maps"
+                          >
+                            <Navigation size={12} />
+                            <span>Navigate Map</span>
+                          </button>
+                          <button
+                            onClick={() => handleWhatsAppChat(visit)}
+                            className="px-2.5 py-1 text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-lg hover:bg-emerald-100 transition flex items-center gap-1"
+                          >
+                            <MessageCircle size={12} />
+                            <span>WhatsApp Owner</span>
+                          </button>
+                        </>
                       )}
                       <button
                         onClick={() => handleUpdateStatus(visit.id, 'CANCELLED')}

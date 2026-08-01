@@ -82,6 +82,10 @@ class PropertySerializer(serializers.ModelSerializer):
 class VisitRequestSerializer(serializers.ModelSerializer):
     property_name = serializers.ReadOnlyField(source='property.name')
     property_locality = serializers.ReadOnlyField(source='property.locality')
+    property_city = serializers.ReadOnlyField(source='property.city')
+    property_address = serializers.ReadOnlyField(source='property.address')
+    property_latitude = serializers.ReadOnlyField(source='property.latitude')
+    property_longitude = serializers.ReadOnlyField(source='property.longitude')
     property_type = serializers.ReadOnlyField(source='property.property_type')
     user_email = serializers.ReadOnlyField(source='user.email')
     room_number = serializers.ReadOnlyField(source='room.room_number')
@@ -91,7 +95,8 @@ class VisitRequestSerializer(serializers.ModelSerializer):
         model = VisitRequest
         fields = [
             'id', 'user', 'user_email', 'property', 'property_name', 
-            'property_locality', 'property_type', 'room', 'room_number', 'room_type',
+            'property_locality', 'property_city', 'property_address', 'property_latitude', 'property_longitude',
+            'property_type', 'room', 'room_number', 'room_type',
             'visit_date', 'visit_time', 'phone', 'notes', 'status', 'created_at'
         ]
         read_only_fields = ['user', 'status']
