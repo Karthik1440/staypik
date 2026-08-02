@@ -567,14 +567,14 @@ export default function Home() {
                 </button>
               </div>
 
-              <div className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredProperties.map(p => (
                   <div
                     key={p.id}
                     onClick={() => navigate(`/property/${p.id}${selectedSharing ? `?sharing=${encodeURIComponent(selectedSharing)}` : ''}`)}
-                    className="w-full bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 cursor-pointer group"
+                    className="w-full bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 cursor-pointer group flex flex-col h-full hover:shadow-md transition duration-300"
                   >
-                    <div className="relative aspect-[16/10] w-full bg-slate-50">
+                    <div className="relative aspect-[4/3] w-full bg-slate-50 overflow-hidden">
                       <img
                         src={p.images && p.images.length > 0 ? p.images[0].image : 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=500&q=80'}
                         alt={p.name}
@@ -590,7 +590,7 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); toggleFavorite(p.id); }}
-                        className="absolute top-3.5 right-3.5 p-2 rounded-full bg-white/85 backdrop-blur-sm text-slate-400 hover:text-red-500 shadow-sm transition"
+                        className="absolute top-3.5 right-3.5 p-2 rounded-full bg-white/85 backdrop-blur-sm text-slate-400 hover:text-red-500 shadow-sm transition active:scale-95 z-10"
                       >
                         <Heart size={16} className={favorites.includes(p.id) ? 'fill-red-500 text-red-500' : 'text-slate-400'} />
                       </button>
@@ -598,40 +598,60 @@ export default function Home() {
                         <span className="absolute bottom-3.5 right-3.5 px-2.5 py-1 text-[10px] font-black rounded bg-red-500 text-white shadow-sm">House Full</span>
                       )}
                     </div>
-                    <div className="p-5 text-left space-y-1.5">
-                      <div className="flex justify-between items-start">
-                        <h3 className="font-extrabold text-slate-800 text-base leading-snug group-hover:text-amber-700 transition line-clamp-2">{p.name}</h3>
-                        <div className="flex items-center text-xs font-black text-amber-700 bg-amber-50 px-2 py-0.5 rounded ml-3">
-                          ⭐ {getRating(p.id)} ({getReviewsCount(p.id)})
+                    <div className="p-4 text-left space-y-3 flex-1 flex flex-col justify-between">
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between items-start">
+                          <h3 className="font-extrabold text-slate-800 text-base leading-snug group-hover:text-amber-700 transition line-clamp-2">{p.name}</h3>
+                          <div className="flex items-center text-xs font-black text-amber-700 bg-amber-50 px-2 py-0.5 rounded ml-2 flex-shrink-0">
+                            ⭐ {getRating(p.id)} <span className="text-slate-400 font-semibold ml-0.5">({getReviewsCount(p.id)})</span>
+                          </div>
+                        </div>
+                        <p className="text-xs font-semibold text-slate-400 flex items-center justify-between">
+                          <span className="flex items-center truncate">
+                            <MapPin size={12} className="mr-0.5 flex-shrink-0" />
+                            <span className="truncate">{p.locality}, {p.city}</span>
+                          </span>
+                          {p.distance !== undefined && p.distance !== null && (
+                            <span className="text-[10px] font-extrabold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded ml-2 flex-shrink-0">
+                              📍 {p.distance.toFixed(1)} km
+                            </span>
+                          )}
+                        </p>
+
+                        <div className="flex items-center space-x-3 text-[11px] font-bold text-slate-500 pt-1">
+                          {p.amenities && p.amenities.slice(0, 3).map((amenity, idx) => (
+                            <div key={idx} className="flex items-center space-x-1 flex-shrink-0">
+                              <span className="text-[#D97706]">{getAmenityIcon(amenity)}</span>
+                              <span>{amenity.split(' ')[0]}</span>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                      <p className="text-xs font-semibold text-slate-400 flex items-center justify-between">
-                        <span className="flex items-center">
-                          <MapPin size={12} className="mr-0.5" />
-                          {p.locality}, {p.city}
-                        </span>
-                        {p.distance !== undefined && p.distance !== null && (
-                          <span className="text-[10px] font-extrabold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded ml-2">
-                            📍 {p.distance.toFixed(1)} km away
-                          </span>
-                        )}
-                      </p>
 
-                      <div className="flex items-center justify-between pt-3 border-t border-slate-50">
-                        <div>
-                          <div className="flex items-baseline">
-                            <span className="text-base font-black text-amber-700">₹{Number(p.base_rent).toLocaleString()}</span>
-                            <span className="text-xs font-semibold text-slate-400 ml-0.5">/month</span>
-                          </div>
-                          {p.deposit > 0 && (
-                            <div className="text-[9px] font-bold text-amber-700/80 text-left mt-0.5">
-                              Deposit: ₹{Number(p.deposit).toLocaleString()}
+                      <div>
+                        <div className="flex items-center justify-between pt-3 border-t border-slate-50">
+                          <div>
+                            <div className="flex items-baseline">
+                              <span className="text-base font-black text-amber-700">₹{Number(p.base_rent).toLocaleString()}</span>
+                              <span className="text-xs font-semibold text-slate-400 ml-0.5">/month</span>
                             </div>
-                          )}
+                            {p.deposit > 0 && (
+                              <div className="text-[9px] font-bold text-slate-400 text-left mt-0.5">
+                                Deposit: ₹{Number(p.deposit).toLocaleString()}
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-[10px] font-extrabold text-amber-700 bg-amber-50 border border-amber-100 px-2.5 py-1 rounded-full">
+                            {p.property_type}
+                          </span>
                         </div>
-                        <span className="text-[10px] font-extrabold text-amber-700 bg-amber-50 border border-amber-100 px-2.5 py-1 rounded-full">
-                          {p.property_type}
-                        </span>
+
+                        <button
+                          type="button"
+                          className="w-full mt-3 py-2 bg-[#D97706] hover:bg-[#B45309] text-white text-xs font-black rounded-xl transition duration-150 active:scale-[0.98] shadow-sm flex items-center justify-center"
+                        >
+                          View Details
+                        </button>
                       </div>
                     </div>
                   </div>

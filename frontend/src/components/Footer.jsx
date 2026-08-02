@@ -89,7 +89,7 @@ export default function Footer() {
             <ul className="space-y-3 text-xs font-semibold">
               <li className="flex items-center space-x-2.5">
                 <Mail size={14} className="text-amber-500 flex-shrink-0" />
-                <span className="truncate">support@staypik.com</span>
+                <span className="truncate">staypikofficial@gmail.com</span>
               </li>
 
             </ul>
