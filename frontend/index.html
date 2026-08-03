@@ -26,12 +26,26 @@
   <meta name="twitter:description" content="Discover premium PG accommodations, co-living spaces, and long-term apartments with Staypik." />
   <meta name="twitter:image" content="https://www.staypik.in/logo512.png" />
 
+  <!-- Preconnect & DNS Prefetch to eliminate network latency for FCP & LCP -->
+  <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
+  <link rel="dns-prefetch" href="https://images.unsplash.com" />
+
+  <!-- Preload Critical LCP Hero Image -->
+  <link rel="preload" as="image" href="https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=800&q=80" fetchpriority="high" />
+
   <title>Staypik | Premium PG & Accommodations</title>
 </head>
 
-<body>
+<body className="bg-slate-50">
   <noscript>Discover amazing rooms and apartments with Staypik.</noscript>
-  <div id="root"></div>
+  <div id="root">
+    <!-- Initial shell skeleton for instant FCP (< 1s) -->
+    <div style="min-height: 100vh; background-color: #f8fafc; font-family: system-ui, -apple-system, sans-serif;">
+      <header style="height: 64px; background: white; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; padding: 0 16px;">
+        <span style="font-weight: 900; font-size: 20px; color: #b45309;">Stay<span style="color: #1e293b;">pik</span></span>
+      </header>
+    </div>
+  </div>
   <script type="module" src="/src/index.jsx"></script>
 </body>
 
