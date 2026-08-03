@@ -50,6 +50,7 @@ export default function Header() {
             onClick={() => dismissBanner(banner.id)}
             className="text-white/80 hover:text-white ml-3 focus:outline-none p-1 rounded hover:bg-white/10 relative z-10 bg-amber-700 pl-2 flex-shrink-0"
             title="Dismiss"
+            aria-label="Dismiss announcement"
           >
             <X size={16} />
           </button>
@@ -122,6 +123,7 @@ export default function Header() {
                         onClick={() => setShowNotifs(!showNotifs)}
                         className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-50 transition relative focus:outline-none"
                         title="Notifications"
+                        aria-label="View Notifications"
                       >
                         <Bell size={20} />
                         {unreadCount > 0 && (
@@ -191,6 +193,7 @@ export default function Header() {
                       onClick={() => { logout(); navigate('/login'); }}
                       className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg transition"
                       title="Logout"
+                      aria-label="Logout account"
                     >
                       <LogOut size={18} />
                     </button>

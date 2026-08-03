@@ -233,6 +233,7 @@ export default function Home() {
             <input
               ref={searchInputRef}
               type="text"
+              aria-label="Search locality or PG name"
               placeholder="Search locality, PG name..."
               className="w-full bg-transparent text-sm font-semibold outline-none text-slate-700 placeholder-slate-400 py-1"
               value={search}
@@ -247,11 +248,13 @@ export default function Home() {
                 : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'
               }`}
             title="Find PGs Near Me"
+            aria-label="Find PGs Near Me"
           >
             <Locate size={18} className={locLoading ? "animate-spin" : ""} />
           </button>
           <button
             onClick={() => setShowFilters(!showFilters)}
+            aria-label="Toggle property filters"
             className={`p-3 rounded-full border shadow-sm transition ${showFilters
                 ? 'bg-amber-700 text-white border-amber-700'
                 : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'
@@ -502,6 +505,8 @@ export default function Home() {
                 <img
                   src={getBannerImageUrl(activeBanner)}
                   alt={activeBanner.title}
+                  fetchPriority="high"
+                  decoding="async"
                   className="w-full h-full object-cover transition duration-500 clip-curved-left"
                 />
 
@@ -597,6 +602,8 @@ export default function Home() {
                       <img
                         src={p.images && p.images.length > 0 ? p.images[0].image : 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=500&q=80'}
                         alt={p.name}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                       />
                       {p.is_featured && (
@@ -609,6 +616,7 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); toggleFavorite(p.id); }}
+                        aria-label="Save to favorites"
                         className="absolute top-3.5 right-3.5 p-2 rounded-full bg-white/85 backdrop-blur-sm text-slate-400 hover:text-red-500 shadow-sm transition active:scale-95 z-10"
                       >
                         <Heart size={16} className={favorites.includes(p.id) ? 'fill-red-500 text-red-500' : 'text-slate-400'} />
@@ -705,6 +713,8 @@ export default function Home() {
                           <img
                             src={p.images && p.images.length > 0 ? p.images[0].image : 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=500&q=80'}
                             alt={p.name}
+                            loading="lazy"
+                            decoding="async"
                             className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                           />
                           <div className="absolute top-3 left-3 bg-[#FEF3C7] text-[#D97706] px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border border-[#FDE68A] flex items-center space-x-1 shadow-sm">
@@ -714,6 +724,7 @@ export default function Home() {
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); toggleFavorite(p.id); }}
+                            aria-label="Save to favorites"
                             className="absolute top-3 right-3 p-1.5 rounded-full bg-white/90 backdrop-blur-sm text-slate-400 hover:text-red-500 shadow-sm transition active:scale-95 flex items-center justify-center z-10"
                           >
                             <Heart size={14} className={favorites.includes(p.id) ? 'fill-red-500 text-red-500' : 'text-slate-400'} />
