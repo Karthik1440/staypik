@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import api from '../api';
 import { Search, MapPin, SlidersHorizontal, Heart, Sparkles, Locate, ShieldCheck, Phone, ArrowRight, IndianRupee, Star, Wifi, Utensils, Shirt, User, Droplet, Car, ArrowUpDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -195,6 +196,24 @@ export default function Home() {
 
   return (
     <div className="space-y-8 max-w-md mx-auto sm:max-w-7xl">
+      <Helmet>
+        <title>Staypik | Find Premium PG Hostels & Co-Living Spaces</title>
+        <meta name="description" content="Search and book verified PG accommodations, hostels, and rental rooms across top cities on Staypik." />
+        <link rel="canonical" href="https://www.staypik.in/" />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "Staypik",
+            "url": "https://www.staypik.in",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://www.staypik.in/?search={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
+          })}
+        </script>
+      </Helmet>
       {/* Mobile Search and Header */}
       <div className="space-y-4">
         {/* Welcome Section */}

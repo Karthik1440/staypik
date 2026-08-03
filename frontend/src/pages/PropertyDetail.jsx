@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -219,6 +220,47 @@ export default function PropertyDetail() {
 
   return (
     <div className="max-w-md mx-auto bg-slate-50 min-h-screen pb-10 text-left animate-fadeIn">
+      <Helmet>
+        <title>{`${name} - ${locality || city || 'PG Accommodation'} | Staypik`}</title>
+        <meta name="description" content={`Book ${name} in ${locality || city || 'India'}. ${property_type || 'PG'} for ${gender || 'all'}. Monthly rent from ₹${base_rent || ''}. Verified listings on Staypik.`} />
+        <link rel="canonical" href={`https://www.staypik.in/property/${id}`} />
+        
+        {/* OpenGraph & Social Cards */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={`${name} | Staypik PG Accommodation`} />
+        <meta property="og:description" content={`Explore ${name} located at ${locality || city}. Rent starting at ₹${base_rent}.`} />
+        {coverImage && <meta property="og:image" content={coverImage} />}
+        <meta property="og:url" content={`https://www.staypik.in/property/${id}`} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${name} | Staypik`} />
+        <meta name="twitter:description" content={`Book ${name} in ${locality || city}.`} />
+        {coverImage && <meta name="twitter:image" content={coverImage} />}
+
+        {/* Schema.org Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Accommodation",
+            "name": name,
+            "description": description,
+            "image": coverImage,
+            "address": {
+              "@type": "PostalAddress",
+              "streetAddress": address,
+              "addressLocality": locality || city,
+              "addressRegion": city,
+              "addressCountry": "IN"
+            },
+            "offers": {
+              "@type": "Offer",
+              "priceCurrency": "INR",
+              "price": base_rent || 0,
+              "availability": "https://schema.org/InStock"
+            }
+          })}
+        </script>
+      </Helmet>
       {/* Top Slider Hero Header */}
       <div 
         className="relative aspect-[4/3] bg-slate-200 w-full overflow-hidden cursor-grab active:cursor-grabbing"
