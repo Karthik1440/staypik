@@ -355,7 +355,7 @@ export default function Home() {
             id: 'fallback-1',
             title: 'No Brokerage. \nDirect Owner Contact.',
             subtitle: 'Save money and connect directly with verified property owners.',
-            image: 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=800&q=80',
+            image: 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=480&q=60&fm=webp',
             button_text: 'Explore Properties',
             link_url: '#listings'
           }
@@ -411,7 +411,7 @@ export default function Home() {
 
         const getBannerImageUrl = (banner) => {
           if (!banner || !banner.image) {
-            return 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=800&q=80';
+            return 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=480&q=60&fm=webp';
           }
           if (banner.image.startsWith('http://') || banner.image.startsWith('https://')) {
             return banner.image;
@@ -600,7 +600,7 @@ export default function Home() {
                   >
                     <div className="relative aspect-[4/3] w-full bg-slate-50 overflow-hidden">
                       <img
-                        src={p.images && p.images.length > 0 ? p.images[0].image : 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=500&q=80'}
+                        src={p.images && p.images.length > 0 ? p.images[0].image : 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=400&q=60&fm=webp'}
                         alt={p.name}
                         loading="lazy"
                         decoding="async"
@@ -711,7 +711,7 @@ export default function Home() {
                         {/* Thumbnail */}
                         <div className="relative aspect-[4/3] w-full bg-slate-50 overflow-hidden">
                           <img
-                            src={p.images && p.images.length > 0 ? p.images[0].image : 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=500&q=80'}
+                            src={p.images && p.images.length > 0 ? p.images[0].image : 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=400&q=60&fm=webp'}
                             alt={p.name}
                             loading="lazy"
                             decoding="async"
