@@ -11,7 +11,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   const { login, djangoLogin, register, resetPassword } = useAuth();
   const navigate = useNavigate();
 

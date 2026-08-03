@@ -161,7 +161,10 @@ export function AuthProvider({ children }) {
   };
 
   const resetPassword = (email) =>
-    sendPasswordResetEmail(auth, email);
+    sendPasswordResetEmail(auth, email, {
+      url: `${window.location.origin}/login`,
+      handleCodeInApp: true,
+    });
 
   return (
     <AuthContext.Provider value={{ user, role, mode, setMode, toggleMode, loading, register, login, djangoLogin, logout, refreshProfile, resetPassword }}>
