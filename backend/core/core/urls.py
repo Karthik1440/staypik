@@ -19,8 +19,12 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from rentals.views import SitemapXmlView, PropertyShareCardView
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('sitemap.xml', SitemapXmlView.as_view(), name='root_sitemap_xml'),
+    path('share/property/<int:pk>/', PropertyShareCardView.as_view(), name='root_property_share_card'),
     path('api/', include('rentals.urls')),
 ]
 

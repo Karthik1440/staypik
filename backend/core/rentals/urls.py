@@ -4,13 +4,19 @@ from .views import (
     PropertyListView, PropertyDetailView, PropertyManagementView,
     RoomManagementView, BookVisitView, BookingsHistoryView, UpdateVisitStatusView,
     OwnerDashboardView, TenantRosterView, ComplaintListView, RentPaymentListView,
-    DeletePropertyImageView, AnnouncementBannerView, GlobalNotificationView, HeroBannerListView, SupportInquiryView
+    DeletePropertyImageView, AnnouncementBannerView, GlobalNotificationView, HeroBannerListView, SupportInquiryView,
+    SitemapXmlView, PropertyShareCardView
 )
 
 urlpatterns = [
     # Auth Endpoints
     path('auth/firebase-login/', FirebaseLoginView.as_view(), name='firebase_login'),
     path('auth/django-login/', DjangoLoginView.as_view(), name='django_login'),
+    
+    # Sitemap & Property Social Share Card
+    path('sitemap.xml', SitemapXmlView.as_view(), name='sitemap_xml'),
+    path('share/property/<int:pk>/', PropertyShareCardView.as_view(), name='property_share_card'),
+    path('rentals/properties/<int:pk>/share/', PropertyShareCardView.as_view(), name='property_share_card_alt'),
     
     # User / Tenant Profile & Become Owner
     path('rentals/profile/', ProfileView.as_view(), name='profile'),

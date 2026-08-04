@@ -76,9 +76,16 @@ export default function PropertyDetail() {
   };
 
   const handleShare = async () => {
+    const formattedText = 
+      `🏡 *${property?.name || 'Staypik Accommodation'}*\n` +
+      `📍 ${property?.locality ? `${property.locality}, ` : ''}${property?.city || 'Bangalore'}\n` +
+      `💰 Rent: ₹${Number(selectedRoom ? selectedRoom.monthly_rent : (property?.base_rent || 0)).toLocaleString()}/mo | Deposit: ₹${Number(selectedRoom && selectedRoom.deposit ? selectedRoom.deposit : (property?.deposit || 0)).toLocaleString()}\n` +
+      `✨ ${property?.property_type || 'PG'} for ${property?.gender || 'All'} • ${property?.amenities && property.amenities.length > 0 ? property.amenities.slice(0, 3).join(', ') : 'Verified listing'}\n\n` +
+      `👉 View photos & book visit:\n${window.location.href}`;
+
     const shareData = {
-      title: property?.name || 'Staypik Property',
-      text: `Check out ${property?.name || 'this property'} on Staypik!`,
+      title: `${property?.name || 'Staypik Property'} - ${property?.locality || property?.city || ''}`,
+      text: formattedText,
       url: window.location.href
     };
 
@@ -93,15 +100,13 @@ export default function PropertyDetail() {
 
     // Fallback: Copy link and open WhatsApp
     try {
-      await navigator.clipboard.writeText(window.location.href);
-      alert("Link copied to clipboard! Opening WhatsApp to share...");
+      await navigator.clipboard.writeText(`${formattedText}`);
+      alert("Property details and link copied to clipboard! Opening WhatsApp to share...");
     } catch (err) {
       console.error("Clipboard copy failed:", err);
     }
     
-    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(
-      `Check out ${property?.name || 'this property'} on Staypik! ${window.location.href}`
-    )}`;
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(formattedText)}`;
     window.open(whatsappUrl, '_blank');
   };
 
@@ -180,9 +185,18 @@ export default function PropertyDetail() {
     ? Array.from(new Set(rooms.map(r => r.room_type)))
     : [];
 
-  const coverImage = images && images.length > 0 
+  const rawCoverImage = images && images.length > 0 
     ? (images[currentImageIndex]?.image || images[0].image) 
     : 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80';
+
+  const absoluteCoverImage = rawCoverImage.startsWith('http://') || rawCoverImage.startsWith('https://')
+    ? rawCoverImage
+    : `${window.location.origin}${rawCoverImage.startsWith('/') ? '' : '/'}${rawCoverImage}`;
+
+  const coverImage = rawCoverImage;
+
+  const shareTitle = `${name} - ${locality || city || 'Bangalore'} | Staypik`;
+  const shareDescription = `Rent starting at ₹${Number(base_rent).toLocaleString()}/month. ${property_type || 'PG'} for ${gender || 'all'} in ${locality ? `${locality}, ` : ''}${city}. Verified listing on Staypik.`;
 
   const getAmenityIcon = (name) => {
     const norm = name.toLowerCase();
@@ -219,23 +233,29 @@ export default function PropertyDetail() {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-slate-50 min-h-screen pb-10 text-left animate-fadeIn">
+    <div className="max-w-md md:max-w-6xl mx-auto bg-slate-50 min-h-screen pb-16 md:pb-12 px-0 md:px-6 pt-0 md:pt-4 text-left animate-fadeIn">
       <Helmet>
-        <title>{`${name} - ${locality || city || 'PG Accommodation'} | Staypik`}</title>
-        <meta name="description" content={`Book ${name} in ${locality || city || 'India'}. ${property_type || 'PG'} for ${gender || 'all'}. Monthly rent from ₹${base_rent || ''}. Verified listings on Staypik.`} />
+        <title>{shareTitle}</title>
+        <meta name="description" content={shareDescription} />
         <link rel="canonical" href={`https://www.staypik.in/property/${id}`} />
         
-        {/* OpenGraph & Social Cards */}
+        {/* OpenGraph & Social Cards for WhatsApp, Facebook, LinkedIn */}
+        <meta property="og:site_name" content="Staypik" />
         <meta property="og:type" content="website" />
-        <meta property="og:title" content={`${name} | Staypik PG Accommodation`} />
-        <meta property="og:description" content={`Explore ${name} located at ${locality || city}. Rent starting at ₹${base_rent}.`} />
-        {coverImage && <meta property="og:image" content={coverImage} />}
+        <meta property="og:title" content={shareTitle} />
+        <meta property="og:description" content={shareDescription} />
+        <meta property="og:image" content={absoluteCoverImage} />
+        <meta property="og:image:secure_url" content={absoluteCoverImage} />
+        <meta property="og:image:type" content="image/jpeg" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:url" content={`https://www.staypik.in/property/${id}`} />
 
+        {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${name} | Staypik`} />
-        <meta name="twitter:description" content={`Book ${name} in ${locality || city}.`} />
-        {coverImage && <meta name="twitter:image" content={coverImage} />}
+        <meta name="twitter:title" content={shareTitle} />
+        <meta name="twitter:description" content={shareDescription} />
+        <meta name="twitter:image" content={absoluteCoverImage} />
 
         {/* Schema.org Structured Data */}
         <script type="application/ld+json">
@@ -244,7 +264,7 @@ export default function PropertyDetail() {
             "@type": "Accommodation",
             "name": name,
             "description": description,
-            "image": coverImage,
+            "image": absoluteCoverImage,
             "address": {
               "@type": "PostalAddress",
               "streetAddress": address,
@@ -261,9 +281,85 @@ export default function PropertyDetail() {
           })}
         </script>
       </Helmet>
-      {/* Top Slider Hero Header */}
+
+      {/* Desktop Top Action Header */}
+      <div className="hidden md:flex justify-between items-center mb-4">
+        <button 
+          onClick={() => navigate(-1)}
+          className="flex items-center text-xs font-extrabold text-slate-500 hover:text-amber-700 transition"
+        >
+          <ArrowLeft size={16} className="mr-1.5 stroke-[2.5px]" />
+          <span>Back to Explore</span>
+        </button>
+
+        <div className="flex items-center space-x-3">
+          <button 
+            onClick={() => toggleFavorite(Number(id))}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 text-xs font-extrabold text-slate-700 transition shadow-sm"
+          >
+            <Heart 
+              size={16} 
+              className={`stroke-[2.5px] ${
+                favorites.includes(Number(id)) ? 'fill-red-500 text-red-500' : 'text-slate-400'
+              }`} 
+            />
+            <span>{favorites.includes(Number(id)) ? 'Saved' : 'Save'}</span>
+          </button>
+
+          <button 
+            onClick={handleShare}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 text-xs font-extrabold text-slate-700 transition shadow-sm"
+          >
+            <Share2 size={16} className="stroke-[2.5px] text-slate-500" />
+            <span>Share</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Desktop Gallery View Grid (md:grid hidden on mobile) */}
+      <div className="hidden md:grid md:grid-cols-3 gap-3 h-[380px] rounded-3xl overflow-hidden bg-slate-200 border border-slate-100 shadow-md">
+        {/* Main Cover Image */}
+        <div className="col-span-2 h-full relative group overflow-hidden cursor-pointer" onClick={() => setCurrentImageIndex(0)}>
+          <img 
+            src={coverImage} 
+            alt={name} 
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+          />
+        </div>
+
+        {/* Right Stacked Thumbnail Grid */}
+        <div className="col-span-1 grid grid-rows-2 gap-3 h-full">
+          <div 
+            className="h-full relative group overflow-hidden cursor-pointer bg-slate-300"
+            onClick={() => setCurrentImageIndex(images && images.length > 1 ? 1 : 0)}
+          >
+            <img 
+              src={images && images.length > 1 ? images[1].image : coverImage} 
+              alt={`${name} preview 2`} 
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+            />
+          </div>
+          <div 
+            className="h-full relative group overflow-hidden cursor-pointer bg-slate-300"
+            onClick={() => setCurrentImageIndex(images && images.length > 2 ? 2 : 0)}
+          >
+            <img 
+              src={images && images.length > 2 ? images[2].image : coverImage} 
+              alt={`${name} preview 3`} 
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+            />
+            {images && images.length > 3 && (
+              <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center text-white font-extrabold text-sm">
+                +{images.length - 2} Photos
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Top Slider Hero Header (md:hidden) */}
       <div 
-        className="relative aspect-[4/3] bg-slate-200 w-full overflow-hidden cursor-grab active:cursor-grabbing"
+        className="md:hidden relative aspect-[4/3] bg-slate-200 w-full overflow-hidden cursor-grab active:cursor-grabbing"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -349,248 +445,303 @@ export default function PropertyDetail() {
         </div>
       </div>
 
-      {/* Main Details Body */}
-      <div className="bg-white rounded-t-[32px] -mt-6 relative z-10 px-6 pt-8 pb-4 space-y-6 shadow-xl border-t border-slate-100/30">
-        {/* Title Block */}
-        <div className="space-y-3">
-          {is_verified && (
-            <div className="flex">
-              <span className="px-3 py-1 text-[11px] font-black rounded-lg bg-emerald-100 text-emerald-700 uppercase tracking-wider">
-                Verified
-              </span>
+      {/* Responsive Content Section: Two-Column Grid on Desktop */}
+      <div className="bg-white rounded-t-[32px] md:rounded-3xl -mt-6 md:mt-6 relative z-10 px-6 md:px-8 pt-8 pb-8 shadow-xl md:shadow-sm border border-slate-100">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          
+          {/* Main Content (Left 2 Columns on Desktop) */}
+          <div className="md:col-span-2 space-y-6">
+            {/* Title Block */}
+            <div className="space-y-3">
+              {is_verified && (
+                <div className="flex">
+                  <span className="px-3 py-1 text-[11px] font-black rounded-lg bg-emerald-100 text-emerald-700 uppercase tracking-wider">
+                    Verified Listing
+                  </span>
+                </div>
+              )}
+
+              <h1 className="text-2xl md:text-3xl font-black text-slate-800 leading-tight">{name}</h1>
+
+              {/* Location and Rating on the same line */}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-bold text-slate-400">
+                <div className="flex items-center">
+                  <MapPin size={14} className="text-slate-400 mr-1 flex-shrink-0" />
+                  <span>{locality}, {city}</span>
+                  {property.distance !== undefined && property.distance !== null && (
+                    <span className="text-emerald-600 font-extrabold ml-1.5">
+                      ({property.distance.toFixed(1)} km away)
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center text-slate-500">
+                  <Star size={14} className="fill-amber-500 text-amber-500 mr-1" />
+                  <span>4.6 <span className="text-slate-400 font-semibold">(128 reviews)</span></span>
+                </div>
+              </div>
             </div>
-          )}
 
-          <h1 className="text-2xl font-black text-slate-800 leading-tight">{name}</h1>
+            <hr className="border-slate-100" />
 
-          {/* Location and Rating on the same line */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-bold text-slate-400">
-            <div className="flex items-center">
-              <MapPin size={13} className="text-slate-400 mr-1 flex-shrink-0" />
-              <span>{locality}, {city}</span>
-              {property.distance !== undefined && property.distance !== null && (
-                <span className="text-emerald-600 font-extrabold ml-1.5">
-                  ({property.distance.toFixed(1)} km away)
-                </span>
+            {/* Premium Metadata Info Box Grid */}
+            <div className="bg-[#F8F9FB] rounded-[24px] p-4.5 grid grid-cols-2 md:grid-cols-4 gap-y-3.5 gap-x-2 border border-slate-100/30">
+              {/* Item 1: Gender */}
+              <div className="flex items-center space-x-2.5">
+                <div className="w-9 h-9 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-amber-700 flex-shrink-0 shadow-sm">
+                  <User size={16} />
+                </div>
+                <div className="text-left min-w-0">
+                  <p className="text-[10px] font-bold text-slate-400 leading-none">Gender</p>
+                  <p className="text-xs font-extrabold text-slate-700 mt-1 truncate">{gender}</p>
+                </div>
+              </div>
+              
+              {/* Item 2: Property Type */}
+              <div className="flex items-center space-x-2.5">
+                <div className="w-9 h-9 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-amber-700 flex-shrink-0 shadow-sm">
+                  <Home size={16} />
+                </div>
+                <div className="text-left min-w-0">
+                  <p className="text-[10px] font-bold text-slate-400 leading-none">Type</p>
+                  <p className="text-xs font-extrabold text-slate-700 mt-1 truncate">{property_type}</p>
+                </div>
+              </div>
+              
+              {/* Item 3: Beds Available or Units Available */}
+              <div className="flex items-center space-x-2.5">
+                <div className="w-9 h-9 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-amber-700 flex-shrink-0 shadow-sm">
+                  <ShieldCheck size={16} />
+                </div>
+                <div className="text-left min-w-0">
+                  <p className="text-[10px] font-bold text-slate-400 leading-none">
+                    {property_type === 'Apartment' ? "Flats Left" : "Beds Left"}
+                  </p>
+                  <p className="text-xs font-extrabold text-slate-700 mt-1 truncate">
+                    {property_type === 'Apartment' ? getAvailableUnits(property) : getVacantBeds(property)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Item 4: Security Deposit */}
+              <div className="flex items-center space-x-2.5">
+                <div className="w-9 h-9 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-amber-700 flex-shrink-0 shadow-sm">
+                  <DollarSign size={16} />
+                </div>
+                <div className="text-left min-w-0">
+                  <p className="text-[10px] font-bold text-slate-400 leading-none">Deposit</p>
+                  <p className="text-xs font-extrabold text-slate-700 mt-1 truncate">
+                    ₹{Number(selectedRoom && Number(selectedRoom.deposit) > 0 ? selectedRoom.deposit : (deposit || 0)).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <hr className="border-slate-100" />
+
+            {/* Amenities Icons Grid */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Amenities</h3>
+              <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+                {amenities && amenities.length > 0 ? (
+                  amenities.map((amenity, idx) => (
+                    <div key={idx} className="flex flex-col items-center justify-center p-3 rounded-2xl bg-slate-50 border border-slate-100 text-slate-600 space-y-1.5">
+                      <div className="text-amber-700">{getAmenityIcon(amenity)}</div>
+                      <span className="text-[10px] font-extrabold w-full text-center break-words">{amenity}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-3 md:col-span-6 text-center text-xs text-slate-400 font-semibold py-2">
+                    Standard utilities provided.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <hr className="border-slate-100" />
+
+            {/* About Block */}
+            <div className="space-y-2">
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">
+                {property_type === 'Apartment' ? 'About this Apartment' : 'About this PG'}
+              </h3>
+              <p className="text-slate-600 text-xs md:text-sm leading-relaxed font-semibold">
+                {readMore ? description : `${description.slice(0, 160)}...`}
+              </p>
+              {description.length > 160 && (
+                <button 
+                  type="button" 
+                  onClick={() => setReadMore(!readMore)}
+                  className="text-xs font-black text-amber-700 hover:underline"
+                >
+                  {readMore ? 'Read less' : 'Read more'}
+                </button>
               )}
             </div>
-            <div className="flex items-center text-slate-500">
-              <Star size={13} className="fill-amber-500 text-amber-500 mr-1" />
-              <span>4.6 <span className="text-slate-400 font-semibold">(128 reviews)</span></span>
-            </div>
-          </div>
-        </div>
 
-        <hr className="border-slate-100" />
+            <hr className="border-slate-100" />
 
-        {/* Premium Metadata Info Box Grid */}
-        <div className="bg-[#F8F9FB] rounded-[24px] p-4.5 grid grid-cols-2 gap-y-3.5 gap-x-2 border border-slate-100/30">
-          {/* Item 1: Gender */}
-          <div className="flex items-center space-x-2.5">
-            <div className="w-9 h-9 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-amber-700 flex-shrink-0 shadow-sm">
-              <User size={16} />
-            </div>
-            <div className="text-left min-w-0">
-              <p className="text-[10px] font-bold text-slate-400 leading-none">Gender</p>
-              <p className="text-xs font-extrabold text-slate-700 mt-1 truncate">{gender}</p>
-            </div>
-          </div>
-          
-          {/* Item 2: Property Type */}
-          <div className="flex items-center space-x-2.5">
-            <div className="w-9 h-9 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-amber-700 flex-shrink-0 shadow-sm">
-              <Home size={16} />
-            </div>
-            <div className="text-left min-w-0">
-              <p className="text-[10px] font-bold text-slate-400 leading-none">Type</p>
-              <p className="text-xs font-extrabold text-slate-700 mt-1 truncate">{property_type}</p>
-            </div>
-          </div>
-          
-          {/* Item 3: Beds Available or Units Available */}
-          <div className="flex items-center space-x-2.5">
-            <div className="w-9 h-9 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-amber-700 flex-shrink-0 shadow-sm">
-              <ShieldCheck size={16} />
-            </div>
-            <div className="text-left min-w-0">
-              <p className="text-[10px] font-bold text-slate-400 leading-none">
-                {property_type === 'Apartment' ? "Flats Left" : "Beds Left"}
-              </p>
-              <p className="text-xs font-extrabold text-slate-700 mt-1 truncate">
-                {property_type === 'Apartment' ? getAvailableUnits(property) : getVacantBeds(property)}
-              </p>
-            </div>
-          </div>
+            {/* Room/Apartment Types Card Selector */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">
+                {property_type === 'Apartment' ? 'Apartment Types' : 'Room Types'}
+              </h3>
 
-          {/* Item 4: Security Deposit */}
-          <div className="flex items-center space-x-2.5">
-            <div className="w-9 h-9 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-amber-700 flex-shrink-0 shadow-sm">
-              <DollarSign size={16} />
-            </div>
-            <div className="text-left min-w-0">
-              <p className="text-[10px] font-bold text-slate-400 leading-none">Security Deposit</p>
-              <p className="text-xs font-extrabold text-slate-700 mt-1 truncate">
-                ₹{Number(selectedRoom && Number(selectedRoom.deposit) > 0 ? selectedRoom.deposit : (deposit || 0)).toLocaleString()}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <hr className="border-slate-100" />
-
-        {/* Amenities Icons Grid */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Amenities</h3>
-          <div className="grid grid-cols-3 gap-3">
-            {amenities && amenities.length > 0 ? (
-              amenities.slice(0, 6).map((amenity, idx) => (
-                <div key={idx} className="flex flex-col items-center justify-center p-3 rounded-2xl bg-slate-50 border border-slate-100 text-slate-600 space-y-1.5">
-                  <div className="text-amber-700">{getAmenityIcon(amenity)}</div>
-                  <span className="text-[10px] font-extrabold w-full text-center break-words">{amenity}</span>
+              {/* Room Type Selector Tabs */}
+              {availableRoomTypes.length > 1 && (
+                <div className="flex space-x-2 overflow-x-auto pb-1.5 hide-scrollbar flex-nowrap whitespace-nowrap">
+                  {availableRoomTypes.map((type) => {
+                    const isActive = activeRoomFilter === type;
+                    return (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => handleRoomFilterChange(type)}
+                        className={`px-4 py-2 rounded-xl text-xs font-black border transition-all duration-150 active:scale-95 flex-shrink-0 ${
+                          isActive 
+                            ? 'bg-amber-700 border-amber-700 text-white shadow-sm'
+                            : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    );
+                  })}
                 </div>
-              ))
-            ) : (
-              <div className="col-span-3 text-center text-xs text-slate-400 font-semibold py-2">
-                Standard utilities provided.
-              </div>
-            )}
-          </div>
-        </div>
+              )}
 
-        <hr className="border-slate-100" />
+              <div className="space-y-3">
+                {filteredRooms && filteredRooms.length > 0 ? (
+                  filteredRooms.map((room) => {
+                    const vacant = Math.max(0, room.total_beds - room.occupied_beds);
+                    const isSelected = selectedRoom?.id === room.id;
+                    return (
+                      <div 
+                        key={room.id}
+                        onClick={() => setSelectedRoom(room)}
+                        className={`p-4 rounded-2xl border transition duration-200 cursor-pointer flex justify-between items-center ${
+                          isSelected 
+                            ? 'border-amber-700 bg-amber-50/20 ring-1 ring-amber-700' 
+                            : 'border-slate-100 bg-white hover:border-slate-200'
+                        }`}
+                      >
+                        <div className="space-y-1 text-left">
+                          <p className="font-extrabold text-slate-800 text-sm">
+                            {room.room_type} {room.room_number ? (property_type === 'Apartment' ? `(Flat/Unit ${room.room_number})` : `(Room ${room.room_number})`) : ''}
+                          </p>
+                          <p className="text-[10px] md:text-xs font-bold text-slate-400">
+                            {property_type === 'Apartment' ? (
+                              <>
+                                {room.furnishing && `${room.furnishing}`}
+                                {room.bathroom && ` • ${room.bathroom} Bath`}
+                                {room.balcony && ` • ${room.balcony} Balcony`}
+                                {room.deposit > 0 && ` • Deposit: ₹${Number(room.deposit).toLocaleString()}`}
+                                {room.occupied_beds > 0 ? ' • Rented / Occupied' : ' • Available'}
+                              </>
+                            ) : (
+                              <>
+                                {vacant === 0 ? 'No beds left' : `${vacant} bed${vacant > 1 ? 's' : ''} left`}
+                                {room.deposit > 0 && ` • Deposit: ₹${Number(room.deposit).toLocaleString()}`}
+                              </>
+                            )}
+                          </p>
+                        </div>
 
-        {/* About Block */}
-        <div className="space-y-2">
-          <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">
-            {property_type === 'Apartment' ? 'About this Apartment' : 'About this PG'}
-          </h3>
-          <p className="text-slate-600 text-xs leading-relaxed font-semibold">
-            {readMore ? description : `${description.slice(0, 140)}...`}
-          </p>
-          <button 
-            type="button" 
-            onClick={() => setReadMore(!readMore)}
-            className="text-xs font-black text-amber-700 hover:underline"
-          >
-            {readMore ? 'Read less' : 'Read more'}
-          </button>
-        </div>
-
-        <hr className="border-slate-100" />
-
-        {/* Room/Apartment Types Card Selector */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">
-            {property_type === 'Apartment' ? 'Apartment Types' : 'Room Types'}
-          </h3>
-
-          {/* Room Type Selector Tabs */}
-          {availableRoomTypes.length > 1 && (
-            <div className="flex space-x-2 overflow-x-auto pb-1.5 -mx-6 px-6 hide-scrollbar flex-nowrap whitespace-nowrap">
-              {availableRoomTypes.map((type) => {
-                const isActive = activeRoomFilter === type;
-                return (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => handleRoomFilterChange(type)}
-                    className={`px-4 py-2 rounded-xl text-xs font-black border transition-all duration-150 active:scale-95 flex-shrink-0 ${
-                      isActive 
-                        ? 'bg-amber-700 border-amber-700 text-white shadow-sm'
-                        : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700'
-                    }`}
-                  >
-                    {type}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          <div className="space-y-3">
-            {filteredRooms && filteredRooms.length > 0 ? (
-              filteredRooms.map((room) => {
-                const vacant = Math.max(0, room.total_beds - room.occupied_beds);
-                const isSelected = selectedRoom?.id === room.id;
-                return (
-                  <div 
-                    key={room.id}
-                    onClick={() => setSelectedRoom(room)}
-                    className={`p-4 rounded-2xl border transition duration-200 cursor-pointer flex justify-between items-center ${
-                      isSelected 
-                        ? 'border-amber-700 bg-amber-50/20 ring-1 ring-amber-700' 
-                        : 'border-slate-100 bg-white hover:border-slate-200'
-                    }`}
-                  >
-                    <div className="space-y-1 text-left">
-                      <p className="font-extrabold text-slate-800 text-sm">
-                        {room.room_type} {room.room_number ? (property_type === 'Apartment' ? `(Flat/Unit ${room.room_number})` : `(Room ${room.room_number})`) : ''}
-                      </p>
-                      <p className="text-[10px] font-bold text-slate-400">
-                        {property_type === 'Apartment' ? (
-                          <>
-                            {room.furnishing && `${room.furnishing}`}
-                            {room.bathroom && ` • ${room.bathroom} Bath`}
-                            {room.balcony && ` • ${room.balcony} Balcony`}
-                            {room.deposit > 0 && ` • Deposit: ₹${Number(room.deposit).toLocaleString()}`}
-                            {room.occupied_beds > 0 ? ' • Rented / Occupied' : ' • Available'}
-                          </>
-                        ) : (
-                          <>
-                            {vacant === 0 ? 'No beds left' : `${vacant} bed${vacant > 1 ? 's' : ''} left`}
-                            {room.deposit > 0 && ` • Deposit: ₹${Number(room.deposit).toLocaleString()}`}
-                          </>
-                        )}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center space-x-3">
-                      <span className="font-black text-slate-800 text-sm">₹{Number(room.monthly_rent).toLocaleString()}<span className="text-[10px] font-bold text-slate-400">/mo</span></span>
-                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                        isSelected ? 'border-amber-700 bg-amber-700 text-white' : 'border-slate-300 bg-white'
-                      }`}>
-                        {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                        <div className="flex items-center space-x-3">
+                          <span className="font-black text-slate-800 text-sm md:text-base">₹{Number(room.monthly_rent).toLocaleString()}<span className="text-[10px] font-bold text-slate-400">/mo</span></span>
+                          <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                            isSelected ? 'border-amber-700 bg-amber-700 text-white' : 'border-slate-300 bg-white'
+                          }`}>
+                            {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    );
+                  })
+                ) : (
+                  <div className="p-6 text-center border border-slate-100 rounded-2xl text-slate-400 font-semibold text-xs bg-slate-50">
+                    {rooms && rooms.length > 0 
+                      ? "No rooms match your search query." 
+                      : "No rooms configured. Contact host for details."}
                   </div>
-                );
-              })
-            ) : (
-              <div className="p-6 text-center border border-slate-100 rounded-2xl text-slate-400 font-semibold text-xs bg-slate-50">
-                {rooms && rooms.length > 0 
-                  ? "No rooms match your search query." 
-                  : "No rooms configured. Contact host for details."}
+                )}
               </div>
-            )}
-          </div>
-
-          <hr className="border-slate-100 mt-6" />
-
-          {/* Booking Action Row */}
-          <div className="flex justify-between items-center pt-6">
-            <div className="text-left space-y-0.5">
-              <p className="text-[10px] font-bold text-slate-400">Price starting from</p>
-              <div className="flex items-baseline">
-                <span className="text-xl font-black text-slate-800">
-                  ₹{Number(selectedRoom ? selectedRoom.monthly_rent : base_rent).toLocaleString()}
-                </span>
-                <span className="text-xs font-bold text-slate-400 ml-0.5">/month</span>
-              </div>
-              <p className="text-[10px] font-extrabold text-amber-700">
-                Deposit: ₹{Number(selectedRoom && Number(selectedRoom.deposit) > 0 ? selectedRoom.deposit : (deposit || 0)).toLocaleString()}
-              </p>
             </div>
-
-            <button 
-              onClick={handleBookVisitRedirect}
-              className="px-6 py-3.5 bg-amber-700 hover:bg-amber-800 text-white text-sm font-black rounded-2xl flex items-center space-x-2 shadow-lg shadow-amber-700/10 active:scale-95 transition-all duration-150"
-            >
-              <span>Book Visit</span>
-              <ChevronRight size={16} className="stroke-[3px]" />
-            </button>
           </div>
+
+          {/* Sticky Desktop Booking Sidebar (Right 1 Column on Desktop) */}
+          <div className="md:col-span-1 hidden md:block">
+            <div className="sticky top-24 bg-white rounded-3xl p-6 shadow-xl border border-slate-100 space-y-6">
+              <div className="space-y-1 text-left pb-4 border-b border-slate-100">
+                <p className="text-xs font-bold text-slate-400">Monthly Rent</p>
+                <div className="flex items-baseline space-x-1">
+                  <span className="text-3xl font-black text-slate-800">
+                    ₹{Number(selectedRoom ? selectedRoom.monthly_rent : base_rent).toLocaleString()}
+                  </span>
+                  <span className="text-xs font-bold text-slate-400">/month</span>
+                </div>
+                <p className="text-xs font-extrabold text-amber-700 mt-1">
+                  Deposit: ₹{Number(selectedRoom && Number(selectedRoom.deposit) > 0 ? selectedRoom.deposit : (deposit || 0)).toLocaleString()}
+                </p>
+              </div>
+
+              {/* Selected Room Summary */}
+              {selectedRoom && (
+                <div className="p-3 bg-amber-50/40 rounded-2xl border border-amber-100 text-left">
+                  <p className="text-[10px] font-extrabold text-amber-800 uppercase tracking-wider">Selected Option</p>
+                  <p className="text-xs font-black text-slate-800 mt-0.5">{selectedRoom.room_type} {selectedRoom.room_number ? `(Unit ${selectedRoom.room_number})` : ''}</p>
+                </div>
+              )}
+
+              {/* Primary Book Visit CTA */}
+              <button 
+                onClick={handleBookVisitRedirect}
+                className="w-full py-4 bg-amber-700 hover:bg-amber-800 text-white text-sm font-black rounded-2xl flex items-center justify-center space-x-2 shadow-lg shadow-amber-700/20 active:scale-95 transition-all duration-150"
+              >
+                <span>Schedule Free Visit</span>
+                <ChevronRight size={18} className="stroke-[3px]" />
+              </button>
+
+              {/* Trust Badges */}
+              <div className="space-y-2 pt-2 text-left">
+                <div className="flex items-center text-xs font-bold text-slate-500">
+                  <ShieldCheck size={16} className="text-emerald-600 mr-2 flex-shrink-0" />
+                  <span>100% Verified Accommodation</span>
+                </div>
+                <div className="flex items-center text-xs font-bold text-slate-500">
+                  <Sparkles size={16} className="text-amber-500 mr-2 flex-shrink-0" />
+                  <span>Zero Commission / Direct Host</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Mobile Floating Action Row (md:hidden) */}
+        <div className="md:hidden border-t border-slate-100 pt-6 mt-6 flex justify-between items-center">
+          <div className="text-left space-y-0.5">
+            <p className="text-[10px] font-bold text-slate-400">Price starting from</p>
+            <div className="flex items-baseline">
+              <span className="text-xl font-black text-slate-800">
+                ₹{Number(selectedRoom ? selectedRoom.monthly_rent : base_rent).toLocaleString()}
+              </span>
+              <span className="text-xs font-bold text-slate-400 ml-0.5">/month</span>
+            </div>
+            <p className="text-[10px] font-extrabold text-amber-700">
+              Deposit: ₹{Number(selectedRoom && Number(selectedRoom.deposit) > 0 ? selectedRoom.deposit : (deposit || 0)).toLocaleString()}
+            </p>
+          </div>
+
+          <button 
+            onClick={handleBookVisitRedirect}
+            className="px-6 py-3.5 bg-amber-700 hover:bg-amber-800 text-white text-sm font-black rounded-2xl flex items-center space-x-2 shadow-lg shadow-amber-700/10 active:scale-95 transition-all duration-150"
+          >
+            <span>Book Visit</span>
+            <ChevronRight size={16} className="stroke-[3px]" />
+          </button>
         </div>
       </div>
     </div>
   );
 }
+

@@ -1041,3 +1041,130 @@ class SupportInquiryView(APIView):
           
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+class SitemapXmlView(APIView):
+    """GET: Dynamically generated search engine XML Sitemap from active properties"""
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        from django.http import HttpResponse
+        base_url = "https://www.staypik.in"
+        today = timezone.now().strftime('%Y-%m-%d')
+
+        properties = Property.objects.filter(is_active=True).values('id', 'created_at')
+
+        xml_lines = [
+            '<?xml version="1.0" encoding="UTF-8"?>',
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+            '  <!-- Static Public Pages -->',
+            '  <url>',
+            f'    <loc>{base_url}/</loc>',
+            f'    <lastmod>{today}</lastmod>',
+            '    <changefreq>daily</changefreq>',
+            '    <priority>1.0</priority>',
+            '  </url>',
+            '  <url>',
+            f'    <loc>{base_url}/login</loc>',
+            f'    <lastmod>{today}</lastmod>',
+            '    <changefreq>monthly</changefreq>',
+            '    <priority>0.5</priority>',
+            '  </url>',
+            '  <url>',
+            f'    <loc>{base_url}/terms-privacy</loc>',
+            f'    <lastmod>{today}</lastmod>',
+            '    <changefreq>monthly</changefreq>',
+            '    <priority>0.3</priority>',
+            '  </url>',
+            '  <url>',
+            f'    <loc>{base_url}/saved</loc>',
+            f'    <lastmod>{today}</lastmod>',
+            '    <changefreq>monthly</changefreq>',
+            '    <priority>0.4</priority>',
+            '  </url>',
+            '  <!-- Dynamic Property Listings -->',
+        ]
+
+        for prop in properties:
+            lastmod = prop['created_at'].strftime('%Y-%m-%d') if prop['created_at'] else today
+            xml_lines.extend([
+                '  <url>',
+                f'    <loc>{base_url}/property/{prop["id"]}</loc>',
+                f'    <lastmod>{lastmod}</lastmod>',
+                '    <changefreq>weekly</changefreq>',
+                '    <priority>0.8</priority>',
+                '  </url>',
+            ])
+
+        xml_lines.append('</urlset>')
+        xml_content = '\n'.join(xml_lines)
+
+        return HttpResponse(xml_content, content_type='application/xml')
+
+
+class PropertyShareCardView(APIView):
+    """GET: Server-rendered HTML Open Graph preview page for social share bots (WhatsApp, Facebook, Twitter)"""
+    permission_classes = [AllowAny]
+
+    def get(self, request, pk):
+        from django.http import HttpResponse
+        prop = get_object_or_404(Property.objects.prefetch_related('images'), id=pk)
+
+        request_host = request.build_absolute_uri('/')
+        
+        # Get first image or fallback unsplash
+        image_url = 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1200&h=630&q=80'
+        first_img = prop.images.first()
+        if first_img and first_img.image:
+            img_path = first_img.image.url
+            if img_path.startswith('http://') or img_path.startswith('https://'):
+                image_url = img_path
+            else:
+                image_url = request.build_absolute_uri(img_path)
+
+        rent_formatted = f"{int(prop.base_rent):,}" if prop.base_rent else "N/A"
+        location_str = f"{prop.locality}, {prop.city}" if prop.locality else prop.city
+        title = f"{prop.name} - {location_str} | Staypik"
+        description = f"Rent starting at ₹{rent_formatted}/mo in {location_str}. Verified {prop.property_type} for {prop.gender}."
+
+        target_url = f"https://www.staypik.in/property/{prop.id}"
+
+        html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{title}</title>
+  <meta name="description" content="{description}" />
+  
+  <!-- Open Graph / WhatsApp / Facebook / LinkedIn -->
+  <meta property="og:site_name" content="Staypik" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="{title}" />
+  <meta property="og:description" content="{description}" />
+  <meta property="og:image" content="{image_url}" />
+  <meta property="og:image:secure_url" content="{image_url}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:url" content="{target_url}" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="{title}" />
+  <meta name="twitter:description" content="{description}" />
+  <meta name="twitter:image" content="{image_url}" />
+
+  <!-- Fast client redirect for human users -->
+  <meta http-equiv="refresh" content="0;url={target_url}" />
+  <script>
+    window.location.href = "{target_url}";
+  </script>
+</head>
+<body style="font-family: system-ui, sans-serif; text-align: center; padding: 50px; background-color: #f8fafc; color: #1e293b;">
+  <h2>Redirecting to {prop.name} on Staypik...</h2>
+  <p><a href="{target_url}" style="color: #b45309; font-weight: bold;">Click here if you are not redirected automatically</a></p>
+</body>
+</html>
+"""
+        return HttpResponse(html_content, content_type='text/html')
+
+
+
