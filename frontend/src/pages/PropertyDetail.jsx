@@ -7,7 +7,7 @@ import {
   ArrowLeft, MapPin, ShieldCheck, Heart, Share2, 
   Wifi, Utensils, Shirt, Shield, Bath, Zap, Sparkles, Star,
   ChevronLeft, ChevronRight, User, Home, DollarSign,
-  Droplet, Car, ArrowUpDown
+  Droplet, Car, ArrowUpDown, X, Grid, Camera, ZoomIn
 } from 'lucide-react';
 
 export default function PropertyDetail() {
@@ -21,6 +21,42 @@ export default function PropertyDetail() {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [activeRoomFilter, setActiveRoomFilter] = useState('');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Lightbox Modal States
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  const openLightbox = (index = 0) => {
+    setLightboxIndex(index);
+    setIsLightboxOpen(true);
+  };
+
+  const closeLightbox = () => {
+    setIsLightboxOpen(false);
+  };
+
+  const nextLightboxImage = () => {
+    if (property?.images && property.images.length > 0) {
+      setLightboxIndex((prev) => (prev + 1) % property.images.length);
+    }
+  };
+
+  const prevLightboxImage = () => {
+    if (property?.images && property.images.length > 0) {
+      setLightboxIndex((prev) => (prev - 1 + property.images.length) % property.images.length);
+    }
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!isLightboxOpen) return;
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowRight') nextLightboxImage();
+      if (e.key === 'ArrowLeft') prevLightboxImage();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isLightboxOpen, property]);
 
   const handleRoomFilterChange = (filterType) => {
     setActiveRoomFilter(filterType);
@@ -317,44 +353,62 @@ export default function PropertyDetail() {
       </div>
 
       {/* Desktop Gallery View Grid (md:grid hidden on mobile) */}
-      <div className="hidden md:grid md:grid-cols-3 gap-3 h-[380px] rounded-3xl overflow-hidden bg-slate-200 border border-slate-100 shadow-md">
+      <div className="hidden md:grid md:grid-cols-3 gap-3 h-[400px] rounded-3xl overflow-hidden bg-slate-200 border border-slate-100 shadow-md relative group">
         {/* Main Cover Image */}
-        <div className="col-span-2 h-full relative group overflow-hidden cursor-pointer" onClick={() => setCurrentImageIndex(0)}>
+        <div 
+          className="col-span-2 h-full relative overflow-hidden cursor-pointer group/item"
+          onClick={() => openLightbox(0)}
+        >
           <img 
             src={coverImage} 
             alt={name} 
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+            className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500" 
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity flex items-end p-4">
+            <span className="text-white text-xs font-black flex items-center space-x-1.5 bg-slate-900/60 backdrop-blur-sm px-3 py-1.5 rounded-xl">
+              <ZoomIn size={14} />
+              <span>Click to view full photo</span>
+            </span>
+          </div>
         </div>
 
         {/* Right Stacked Thumbnail Grid */}
         <div className="col-span-1 grid grid-rows-2 gap-3 h-full">
           <div 
-            className="h-full relative group overflow-hidden cursor-pointer bg-slate-300"
-            onClick={() => setCurrentImageIndex(images && images.length > 1 ? 1 : 0)}
+            className="h-full relative overflow-hidden cursor-pointer group/item bg-slate-300"
+            onClick={() => openLightbox(images && images.length > 1 ? 1 : 0)}
           >
             <img 
               src={images && images.length > 1 ? images[1].image : coverImage} 
               alt={`${name} preview 2`} 
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+              className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500" 
             />
           </div>
           <div 
-            className="h-full relative group overflow-hidden cursor-pointer bg-slate-300"
-            onClick={() => setCurrentImageIndex(images && images.length > 2 ? 2 : 0)}
+            className="h-full relative overflow-hidden cursor-pointer group/item bg-slate-300"
+            onClick={() => openLightbox(images && images.length > 2 ? 2 : 0)}
           >
             <img 
               src={images && images.length > 2 ? images[2].image : coverImage} 
               alt={`${name} preview 3`} 
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+              className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500" 
             />
             {images && images.length > 3 && (
-              <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center text-white font-extrabold text-sm">
+              <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center text-white font-black text-sm">
                 +{images.length - 2} Photos
               </div>
             )}
           </div>
         </div>
+
+        {/* Floating View All Photos Button */}
+        <button
+          onClick={() => openLightbox(0)}
+          className="absolute bottom-4 right-4 bg-white/90 hover:bg-white text-slate-800 text-xs font-black px-4 py-2.5 rounded-2xl shadow-xl backdrop-blur-md transition-all active:scale-95 flex items-center space-x-2 z-20 border border-slate-200/50"
+        >
+          <Camera size={16} className="text-amber-700" />
+          <span>View All Photos ({images && images.length > 0 ? images.length : 1})</span>
+        </button>
       </div>
 
       {/* Mobile Top Slider Hero Header (md:hidden) */}
@@ -741,6 +795,75 @@ export default function PropertyDetail() {
           </button>
         </div>
       </div>
+
+      {/* Fullscreen Lightbox Photo Viewer Modal */}
+      {isLightboxOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex flex-col justify-between p-4 md:p-6 text-white animate-fadeIn select-none">
+          {/* Lightbox Header Bar */}
+          <div className="flex justify-between items-center max-w-7xl mx-auto w-full z-10 pt-2">
+            <div className="text-left">
+              <p className="text-sm font-black tracking-wide">{name}</p>
+              <p className="text-xs text-amber-400 font-extrabold mt-0.5">
+                Photo {lightboxIndex + 1} of {images && images.length > 0 ? images.length : 1}
+              </p>
+            </div>
+
+            <button 
+              onClick={closeLightbox}
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition active:scale-90 border border-white/10"
+              title="Close (Esc)"
+            >
+              <X size={20} className="stroke-[2.5px]" />
+            </button>
+          </div>
+
+          {/* Centered Main Image (Uncropped object-contain) */}
+          <div className="relative flex-grow flex items-center justify-center my-3 w-full overflow-hidden">
+            <img 
+              src={images && images.length > 0 ? (images[lightboxIndex]?.image || images[0].image) : coverImage} 
+              alt={`${name} photo ${lightboxIndex + 1}`}
+              className="max-h-[72vh] md:max-h-[78vh] max-w-[95vw] md:max-w-[85vw] object-contain rounded-2xl shadow-2xl transition-all duration-300 pointer-events-none"
+            />
+
+            {/* Lightbox Chevron Controls */}
+            {images && images.length > 1 && (
+              <>
+                <button 
+                  onClick={prevLightboxImage}
+                  className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-slate-900/80 hover:bg-slate-900 text-white flex items-center justify-center transition backdrop-blur-sm active:scale-90 shadow-2xl border border-white/20 z-20"
+                  title="Previous (←)"
+                >
+                  <ChevronLeft size={26} className="stroke-[3px]" />
+                </button>
+                <button 
+                  onClick={nextLightboxImage}
+                  className="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-slate-900/80 hover:bg-slate-900 text-white flex items-center justify-center transition backdrop-blur-sm active:scale-90 shadow-2xl border border-white/20 z-20"
+                  title="Next (→)"
+                >
+                  <ChevronRight size={26} className="stroke-[3px]" />
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Lightbox Bottom Thumbnail Strip */}
+          {images && images.length > 1 && (
+            <div className="max-w-3xl mx-auto w-full overflow-x-auto py-2 flex justify-center items-center space-x-2.5 hide-scrollbar">
+              {images.map((img, idx) => (
+                <button
+                  key={img.id || idx}
+                  onClick={() => setLightboxIndex(idx)}
+                  className={`w-14 h-14 md:w-16 md:h-16 rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${
+                    idx === lightboxIndex ? 'border-amber-500 scale-105 opacity-100 shadow-lg' : 'border-white/20 opacity-40 hover:opacity-80'
+                  }`}
+                >
+                  <img src={img.image} alt="thumbnail" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
