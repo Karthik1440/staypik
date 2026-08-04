@@ -36,6 +36,43 @@
   <!-- Preload Critical LCP Hero Image -->
   <link rel="preload" as="image" href="https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=480&q=60&fm=webp" fetchpriority="high" />
 
+  <!-- JSON-LD Structured Data for SEO -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://www.staypik.in/#website",
+        "url": "https://www.staypik.in/",
+        "name": "Staypik",
+        "description": "Discover verified PG accommodations, co-living spaces, and long-term rental apartments.",
+        "publisher": {
+          "@id": "https://www.staypik.in/#organization"
+        },
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://www.staypik.in/?search={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://www.staypik.in/#organization",
+        "name": "Staypik",
+        "url": "https://www.staypik.in/",
+        "logo": "https://www.staypik.in/logo512.png",
+        "sameAs": [
+          "https://www.instagram.com/staypik",
+          "https://www.facebook.com/staypik",
+          "https://twitter.com/staypik",
+          "https://www.linkedin.com/company/staypik"
+        ]
+      }
+    ]
+  }
+  </script>
+
   <title>Staypik | Premium PG & Accommodations</title>
 </head>
 
