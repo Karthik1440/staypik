@@ -410,10 +410,10 @@ export default function RentTracking() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-3 sm:px-6 sm:py-3.5 rounded-3xl border border-slate-200/80 shadow-xs">
         
         {/* Navigation Tabs */}
-        <div className="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-2xl">
+        <div className="flex items-center space-x-1 sm:space-x-1.5 bg-slate-100 p-1 rounded-2xl overflow-x-auto max-w-full no-scrollbar shrink-0">
           <button
             onClick={() => setActiveTab('active')}
-            className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center space-x-2 ${
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-black transition flex items-center space-x-1.5 whitespace-nowrap shrink-0 ${
               activeTab === 'active'
                 ? 'bg-white text-slate-900 shadow-xs border border-slate-200/60'
                 : 'text-slate-500 hover:text-slate-800'
@@ -421,7 +421,7 @@ export default function RentTracking() {
           >
             <span>Active Dues</span>
             {activeInvoices.length > 0 && (
-              <span className="px-2 py-0.5 text-[10px] font-black rounded-full bg-[#E65100] text-white">
+              <span className="px-1.5 py-0.5 text-[10px] font-black rounded-full bg-[#E65100] text-white">
                 {activeInvoices.length}
               </span>
             )}
@@ -429,7 +429,7 @@ export default function RentTracking() {
 
           <button
             onClick={() => setActiveTab('history')}
-            className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center space-x-2 ${
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-black transition flex items-center space-x-1.5 whitespace-nowrap shrink-0 ${
               activeTab === 'history'
                 ? 'bg-white text-slate-900 shadow-xs border border-slate-200/60'
                 : 'text-slate-500 hover:text-slate-800'
@@ -437,7 +437,7 @@ export default function RentTracking() {
           >
             <span>Paid History</span>
             {paymentHistory.length > 0 && (
-              <span className="px-2 py-0.5 text-[10px] font-black rounded-full bg-slate-600 text-white">
+              <span className="px-1.5 py-0.5 text-[10px] font-black rounded-full bg-slate-600 text-white">
                 {paymentHistory.length}
               </span>
             )}
@@ -445,13 +445,13 @@ export default function RentTracking() {
 
           <button
             onClick={() => setActiveTab('monthly')}
-            className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center space-x-2 ${
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-black transition flex items-center space-x-1.5 whitespace-nowrap shrink-0 ${
               activeTab === 'monthly'
                 ? 'bg-gradient-to-r from-[#D84300] to-[#E55100] text-white shadow-md'
                 : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            <BarChart3 size={14} />
+            <BarChart3 size={14} className="shrink-0" />
             <span>Monthly Performance</span>
           </button>
         </div>

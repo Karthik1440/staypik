@@ -216,31 +216,31 @@ export default function RoomConfigurator() {
     <div className="max-w-6xl mx-auto space-y-6 pb-20 animate-fadeIn font-sans">
       
       {/* Top Header & Property Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs">
         <div className="flex items-center space-x-3">
-          <Link to="/properties" className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition">
+          <Link to="/properties" className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition shrink-0">
             <ArrowLeft size={18} />
           </Link>
-          <div>
-            <div className="flex items-center space-x-2 text-xs font-bold text-amber-700 uppercase tracking-wider">
+          <div className="min-w-0">
+            <div className="flex items-center space-x-1.5 sm:space-x-2 text-[10px] sm:text-xs font-bold text-amber-700 uppercase tracking-wider truncate">
               <span>Host Console</span>
               <span>/</span>
               <span>Room & Bed Configurator</span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5 mt-0.5">
-              <Building2 size={24} className="text-amber-700" />
-              <span>{configData?.property?.name || 'Property Configurator'}</span>
+            <h1 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2 mt-0.5 truncate">
+              <Building2 size={22} className="text-amber-700 shrink-0" />
+              <span className="truncate">{configData?.property?.name || 'Property Configurator'}</span>
             </h1>
           </div>
         </div>
 
         {properties.length > 0 && (
-          <div className="flex items-center space-x-3">
-            <span className="text-xs font-bold text-slate-500 hidden sm:inline">Active Property:</span>
+          <div className="flex items-center space-x-3 w-full sm:w-auto">
+            <span className="text-xs font-bold text-slate-500 hidden sm:inline shrink-0">Active Property:</span>
             <select
               value={selectedPropertyId}
               onChange={(e) => handlePropertyChange(e.target.value)}
-              className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none cursor-pointer"
+              className="w-full sm:w-auto px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none cursor-pointer"
             >
               {properties.map(p => (
                 <option key={p.id} value={p.id}>
@@ -253,7 +253,7 @@ export default function RoomConfigurator() {
       </div>
 
       {/* TABS HEADER BAR & SEARCH INPUT */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white px-5 py-3 rounded-2xl border border-slate-200/80 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 sm:px-5 sm:py-3 rounded-2xl border border-slate-200/80 shadow-xs">
         
         {/* Navigation Tabs */}
         <div className="flex items-center space-x-2">
@@ -323,25 +323,25 @@ export default function RoomConfigurator() {
         <>
           {activeTab === 'tree' ? (
             /* PROFESSIONAL TREE HIERARCHY (NO EMOJIS) */
-            <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-5 sm:p-6 space-y-6">
+            <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs p-3 sm:p-6 space-y-5">
               
               {/* PROPERTY ROOT CARD */}
-              <div className="flex items-center justify-between p-4 bg-amber-50/60 border border-amber-200/80 rounded-2xl">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2.5 bg-amber-700 text-white rounded-xl shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:p-4 bg-amber-50/60 border border-amber-200/80 rounded-2xl">
+                <div className="flex items-center space-x-3 min-w-0">
+                  <div className="p-2.5 bg-amber-700 text-white rounded-xl shadow-xs shrink-0">
                     <Building2 size={20} />
                   </div>
-                  <div>
-                    <h2 className="text-base font-black text-slate-900">
+                  <div className="min-w-0">
+                    <h2 className="text-sm sm:text-base font-black text-slate-900 truncate">
                       Property ({configData.property.name})
                     </h2>
-                    <p className="text-xs font-semibold text-slate-500 mt-0.5">
+                    <p className="text-[11px] sm:text-xs font-semibold text-slate-500 mt-0.5 truncate">
                       {configData.property.locality}, {configData.property.city}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 shrink-0 self-end sm:self-auto">
                   <button
                     onClick={() => openAddRoomModal(1)}
                     className="px-3.5 py-1.5 bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center space-x-1"
@@ -358,34 +358,34 @@ export default function RoomConfigurator() {
                   {searchQuery ? `No rooms or tenants matching "${searchQuery}"` : 'No floors created yet.'}
                 </div>
               ) : (
-                <div className="space-y-4 pl-2 sm:pl-4">
+                <div className="space-y-4 pl-1 sm:pl-4">
                   {filteredFloors.map((floorObj) => {
                     const isFloorExpanded = expandedFloors[floorObj.floor_number] !== false;
 
                     return (
-                      <div key={floorObj.floor_number} className="relative pl-6 border-l-2 border-amber-200/80 space-y-3">
+                      <div key={floorObj.floor_number} className="relative pl-4 sm:pl-6 border-l-2 border-amber-200/80 space-y-3">
                         {/* Connecting Line Accent */}
                         <div className="absolute -left-[9px] top-4 w-4 h-4 rounded-full bg-amber-700 ring-4 ring-amber-100 flex items-center justify-center text-white text-[9px] font-black">
                           {floorObj.floor_number}
                         </div>
 
                         {/* FLOOR BAR HEADER */}
-                        <div className="flex items-center justify-between p-3.5 bg-slate-50 hover:bg-slate-100/80 rounded-xl border border-slate-200/80 transition">
-                          <div className="flex items-center space-x-3">
+                        <div className="flex flex-wrap sm:flex-nowrap items-center justify-between p-2.5 sm:p-3.5 gap-2 bg-slate-50 hover:bg-slate-100/80 rounded-xl border border-slate-200/80 transition">
+                          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
                             <button
                               onClick={() => toggleFloorExpand(floorObj.floor_number)}
-                              className="text-slate-500 hover:text-slate-800 p-0.5"
+                              className="text-slate-500 hover:text-slate-800 p-0.5 shrink-0"
                             >
                               {isFloorExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
                             </button>
-                            <Layers size={18} className="text-amber-700" />
-                            <span className="font-extrabold text-slate-900 text-sm">{floorObj.floor_name}</span>
-                            <span className="px-2.5 py-0.5 rounded-full bg-slate-200/80 text-slate-700 text-xs font-bold">
+                            <Layers size={18} className="text-amber-700 shrink-0" />
+                            <span className="font-extrabold text-slate-900 text-xs sm:text-sm truncate">{floorObj.floor_name}</span>
+                            <span className="px-2 py-0.5 rounded-full bg-slate-200/80 text-slate-700 text-[10px] sm:text-xs font-bold whitespace-nowrap">
                               {floorObj.rooms.length} Rooms
                             </span>
                           </div>
 
-                          <div className="flex items-center space-x-3">
+                          <div className="flex items-center space-x-3 shrink-0 ml-auto sm:ml-0">
                             <button
                               onClick={() => openAddRoomModal(floorObj.floor_number)}
                               className="text-xs font-extrabold text-amber-800 hover:text-amber-900 flex items-center space-x-1"
@@ -398,111 +398,111 @@ export default function RoomConfigurator() {
 
                         {/* ROOMS LIST UNDER FLOOR */}
                         {isFloorExpanded && (
-                          <div className="space-y-3 pl-4 sm:pl-8 pt-1">
+                          <div className="space-y-3 pl-2 sm:pl-8 pt-1">
                             {floorObj.rooms.map((room) => {
                               const isRoomExpanded = expandedRooms[room.id] !== false;
                               const isFull = room.occupied_beds >= room.total_beds;
                               const isEmpty = room.occupied_beds === 0;
 
                               return (
-                                <div key={room.id} className="relative pl-6 border-l-2 border-slate-200 space-y-2">
-                                  <div className="absolute -left-[1px] top-4 w-4 h-[1px] bg-slate-300"></div>
+                                <div key={room.id} className="relative pl-3 sm:pl-6 border-l-2 border-slate-200 space-y-2">
+                                  <div className="absolute -left-[1px] top-4 w-3 sm:w-4 h-[1px] bg-slate-300"></div>
 
                                   {/* ROOM ROW CONTAINER */}
-                                  <div className="flex items-center justify-between p-3 bg-white hover:bg-slate-50/80 rounded-xl border border-slate-200/80 transition shadow-xs">
-                                    <div className="flex items-center space-x-3">
+                                  <div className="flex flex-wrap sm:flex-nowrap items-center justify-between p-2.5 sm:p-3 gap-2 bg-white hover:bg-slate-50/80 rounded-xl border border-slate-200/80 transition shadow-xs">
+                                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-3 min-w-0">
                                       <button
                                         onClick={() => toggleRoomExpand(room.id)}
-                                        className="text-slate-400 hover:text-slate-700 p-0.5"
+                                        className="text-slate-400 hover:text-slate-700 p-0.5 shrink-0"
                                       >
                                         {isRoomExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                                       </button>
-                                      <DoorOpen size={18} className="text-amber-800" />
-                                      <span className="font-extrabold text-slate-900 text-sm">
+                                      <DoorOpen size={16} className="text-amber-800 shrink-0" />
+                                      <span className="font-extrabold text-slate-900 text-xs sm:text-sm whitespace-nowrap">
                                         Room {room.room_number}
                                       </span>
-                                      <span className="px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-900 text-xs font-bold border border-amber-200/60">
+                                      <span className="px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 text-[10px] sm:text-xs font-bold border border-amber-200/60 whitespace-nowrap">
                                         {room.room_type}
                                       </span>
-                                      <span className="text-xs font-extrabold text-amber-700">
+                                      <span className="text-[11px] sm:text-xs font-extrabold text-amber-700 whitespace-nowrap">
                                         ₹{Number(room.monthly_rent).toLocaleString()}/mo
                                       </span>
                                     </div>
 
-                                    <div className="flex items-center space-x-3">
+                                    <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 ml-auto sm:ml-0">
                                       {/* Occupancy ratio pill */}
-                                      <div className={`px-2.5 py-1 rounded-full text-xs font-extrabold flex items-center space-x-1.5 ${
+                                      <div className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-extrabold flex items-center space-x-1 ${
                                         isFull 
                                           ? 'bg-red-50 text-red-700 border border-red-200' 
                                           : isEmpty 
                                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
                                           : 'bg-amber-50 text-amber-900 border border-amber-200'
                                       }`}>
-                                        <Users size={13} />
+                                        <Users size={12} />
                                         <span>{room.occupied_beds}/{room.total_beds}</span>
                                       </div>
 
                                       <button
                                         onClick={() => openEditRoomModal(room)}
-                                        className="p-1.5 text-slate-500 hover:text-amber-800 hover:bg-slate-100 rounded-lg transition"
+                                        className="p-1 sm:p-1.5 text-slate-500 hover:text-amber-800 hover:bg-slate-100 rounded-lg transition"
                                         title="Edit Room Details"
                                       >
-                                        <Edit2 size={14} />
+                                        <Edit2 size={13} />
                                       </button>
 
                                       <button
                                         onClick={() => handleDeleteRoom(room.id, room.room_number)}
-                                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                                        className="p-1 sm:p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
                                         title="Delete Room"
                                       >
-                                        <Trash2 size={14} />
+                                        <Trash2 size={13} />
                                       </button>
                                     </div>
                                   </div>
 
                                   {/* BEDS LIST UNDER ROOM */}
                                   {isRoomExpanded && (
-                                    <div className="space-y-2 pl-6 sm:pl-10 pt-1">
+                                    <div className="space-y-2 pl-2 sm:pl-10 pt-1">
                                       {room.beds.map((bed) => (
-                                        <div key={bed.label} className="relative pl-6 border-l-2 border-slate-200">
-                                          <div className="absolute -left-[1px] top-4 w-4 h-[1px] bg-slate-300"></div>
+                                        <div key={bed.label} className="relative pl-3 sm:pl-6 border-l-2 border-slate-200">
+                                          <div className="absolute -left-[1px] top-4 w-3 sm:w-4 h-[1px] bg-slate-300"></div>
 
                                           {/* BED ROW CONTAINER */}
-                                          <div className="flex items-center justify-between p-3 bg-slate-50/60 hover:bg-slate-100/60 rounded-xl border border-slate-200/60 transition">
-                                            <div className="flex items-center space-x-3">
-                                              <Bed size={16} className="text-slate-600" />
-                                              <span className="font-extrabold text-xs text-slate-800">
+                                          <div className="flex flex-wrap sm:flex-nowrap items-center justify-between p-2.5 sm:p-3 gap-2 bg-slate-50/60 hover:bg-slate-100/60 rounded-xl border border-slate-200/60 transition">
+                                            <div className="flex flex-wrap items-center gap-1.5 sm:gap-3 min-w-0">
+                                              <Bed size={14} className="text-slate-600 shrink-0" />
+                                              <span className="font-extrabold text-xs text-slate-800 whitespace-nowrap">
                                                 {bed.label}
                                               </span>
-                                              <span className="text-slate-300 font-bold">→</span>
+                                              <span className="text-slate-300 font-bold text-xs">→</span>
 
                                               {bed.is_occupied ? (
-                                                <div className="flex items-center space-x-1.5 font-bold text-xs text-slate-900">
-                                                  <User size={14} className="text-amber-700" />
-                                                  <span>{bed.tenant_name}</span>
+                                                <div className="flex items-center space-x-1 font-bold text-xs text-slate-900 min-w-0">
+                                                  <User size={13} className="text-amber-700 shrink-0" />
+                                                  <span className="truncate max-w-[100px] sm:max-w-none">{bed.tenant_name}</span>
                                                 </div>
                                               ) : (
-                                                <span className="text-xs font-semibold text-slate-400">
+                                                <span className="text-xs font-semibold text-slate-400 whitespace-nowrap">
                                                   Vacant
                                                 </span>
                                               )}
                                             </div>
 
-                                            <div className="flex items-center space-x-3">
+                                            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 ml-auto sm:ml-0">
                                               {bed.is_occupied ? (
-                                                <span className="px-3 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-black text-[10px] uppercase tracking-wider border border-emerald-200">
+                                                <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-black text-[9px] sm:text-[10px] uppercase tracking-wider border border-emerald-200 whitespace-nowrap">
                                                   OCCUPIED
                                                 </span>
                                               ) : (
-                                                <div className="flex items-center space-x-2">
-                                                  <span className="px-3 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-black text-[10px] uppercase tracking-wider border border-emerald-200">
+                                                <div className="flex items-center space-x-1.5">
+                                                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-black text-[9px] sm:text-[10px] uppercase tracking-wider border border-emerald-200 whitespace-nowrap">
                                                     AVAILABLE
                                                   </span>
                                                   <Link
                                                     to="/tenants"
-                                                    className="text-[11px] font-bold text-amber-800 hover:underline flex items-center space-x-1"
+                                                    className="text-[10px] sm:text-[11px] font-bold text-amber-800 hover:underline flex items-center space-x-0.5 whitespace-nowrap"
                                                   >
-                                                    <UserPlus size={13} />
+                                                    <UserPlus size={12} />
                                                     <span>Assign</span>
                                                   </Link>
                                                 </div>
@@ -525,31 +525,31 @@ export default function RoomConfigurator() {
               )}
 
               {/* SUMMARY BOX AT BOTTOM */}
-              <div className="p-5 bg-slate-900 text-white rounded-2xl space-y-3 font-sans shadow-md border border-slate-800">
-                <div className="flex items-center space-x-2 font-black text-sm">
+              <div className="p-4 sm:p-5 bg-slate-900 text-white rounded-2xl space-y-3 font-sans shadow-md border border-slate-800">
+                <div className="flex items-center space-x-2 font-black text-xs sm:text-sm">
                   <BarChart3 size={18} className="text-amber-400" />
                   <span>Property Occupancy Summary</span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-extrabold text-slate-300">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-xs font-extrabold text-slate-300">
                   <div>
-                    <span className="text-slate-400 block text-[10px] uppercase tracking-wider">Total Rooms</span>
-                    <span className="text-white text-base font-black">{configData.summary.total_rooms}</span>
+                    <span className="text-slate-400 block text-[9px] sm:text-[10px] uppercase tracking-wider">Total Rooms</span>
+                    <span className="text-white text-sm sm:text-base font-black">{configData.summary.total_rooms}</span>
                   </div>
 
                   <div>
-                    <span className="text-slate-400 block text-[10px] uppercase tracking-wider">Total Beds</span>
-                    <span className="text-white text-base font-black">{configData.summary.total_beds}</span>
+                    <span className="text-slate-400 block text-[9px] sm:text-[10px] uppercase tracking-wider">Total Beds</span>
+                    <span className="text-white text-sm sm:text-base font-black">{configData.summary.total_beds}</span>
                   </div>
 
                   <div>
-                    <span className="text-amber-400 block text-[10px] uppercase tracking-wider">Occupied</span>
-                    <span className="text-amber-400 text-base font-black">{configData.summary.occupied_beds}</span>
+                    <span className="text-amber-400 block text-[9px] sm:text-[10px] uppercase tracking-wider">Occupied</span>
+                    <span className="text-amber-400 text-sm sm:text-base font-black">{configData.summary.occupied_beds}</span>
                   </div>
 
                   <div>
-                    <span className="text-emerald-400 block text-[10px] uppercase tracking-wider">Vacant</span>
-                    <span className="text-emerald-400 text-base font-black">{configData.summary.vacant_beds}</span>
+                    <span className="text-emerald-400 block text-[9px] sm:text-[10px] uppercase tracking-wider">Vacant</span>
+                    <span className="text-emerald-400 text-sm sm:text-base font-black">{configData.summary.vacant_beds}</span>
                   </div>
                 </div>
               </div>
