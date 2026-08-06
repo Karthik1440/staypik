@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
-import { Home, Compass, User, Calendar, LogOut, LayoutDashboard, Building, Users, FileWarning, DollarSign, Bell, X, Search, Heart } from 'lucide-react';
+import { Home, Compass, User, Calendar, LogOut, LayoutDashboard, Building, DoorOpen, Users, FileWarning, DollarSign, Bell, X, Search, Heart } from 'lucide-react';
 
 export default function Header() {
   const { user, role, mode, toggleMode, logout } = useAuth();
@@ -84,6 +84,10 @@ export default function Header() {
                       <Building size={16} />
                       <span>Properties</span>
                     </Link>
+                    <Link to="/room-configurator" className="flex items-center space-x-1.5 hover:text-amber-700 transition">
+                      <DoorOpen size={16} />
+                      <span>Room Config</span>
+                    </Link>
                     <Link to="/tenants" className="flex items-center space-x-1.5 hover:text-amber-700 transition">
                       <Users size={16} />
                       <span>Tenants</span>
@@ -127,10 +131,11 @@ export default function Header() {
                       >
                         <Bell size={20} />
                         {unreadCount > 0 && (
-                          <span className="absolute top-1 right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-red-500 text-[9px] font-black text-white ring-2 ring-white">
+                          <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[10px] font-black text-white leading-none">
                             {unreadCount}
                           </span>
                         )}
+
                       </button>
 
                       {showNotifs && (
@@ -224,6 +229,10 @@ export default function Header() {
               <Link to="/properties" className="flex flex-col items-center text-xs font-semibold text-slate-500 hover:text-amber-700">
                 <Building size={20} />
                 <span className="mt-0.5">Properties</span>
+              </Link>
+              <Link to="/room-configurator" className="flex flex-col items-center text-xs font-semibold text-slate-500 hover:text-amber-700">
+                <DoorOpen size={20} />
+                <span className="mt-0.5">Rooms</span>
               </Link>
               <Link to="/tenants" className="flex flex-col items-center text-xs font-semibold text-slate-500 hover:text-amber-700">
                 <Users size={20} />

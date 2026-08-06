@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api';
-import { Plus, Edit2, Trash2, Home, Users, MapPin } from 'lucide-react';
+import { Plus, Edit2, Trash2, Home, Users, MapPin, DoorOpen } from 'lucide-react';
 
 export default function Properties() {
   const [properties, setProperties] = useState([]);
@@ -136,18 +136,26 @@ export default function Properties() {
                   </div>
 
                   {/* Actions Button Panel */}
-                  <div className="flex space-x-3 pt-3 border-t border-slate-50">
+                  <div className="flex space-x-2 pt-3 border-t border-slate-50">
+                    <Link 
+                      to={`/properties/${id}/rooms`}
+                      className="flex-1 py-2 px-3 rounded-xl bg-amber-700 text-white hover:bg-amber-800 text-xs font-bold transition flex items-center justify-center space-x-1.5 shadow-sm"
+                    >
+                      <DoorOpen size={14} />
+                      <span>Room Config</span>
+                    </Link>
+
                     <Link 
                       to={`/properties/edit/${id}`}
-                      className="flex-1 py-2 rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-800 border border-slate-200 text-xs font-bold transition flex items-center justify-center space-x-1.5"
+                      className="py-2 px-3 rounded-xl bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 text-xs font-bold transition flex items-center justify-center space-x-1.5"
                     >
                       <Edit2 size={12} />
-                      <span>Configure & Rooms</span>
+                      <span>Edit Details</span>
                     </Link>
 
                     <button 
                       onClick={() => handleDelete(id, name)}
-                      className="px-4 py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 border border-red-100 text-xs font-bold transition flex items-center justify-center"
+                      className="px-3 py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 border border-red-100 text-xs font-bold transition flex items-center justify-center"
                       title="Delete Listing"
                     >
                       <Trash2 size={14} />
@@ -162,3 +170,4 @@ export default function Properties() {
     </div>
   );
 }
+

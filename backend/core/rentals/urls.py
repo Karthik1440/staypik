@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (
     FirebaseLoginView, DjangoLoginView, ProfileView, BecomeOwnerView,
     PropertyListView, PropertyDetailView, PropertyManagementView,
-    RoomManagementView, BookVisitView, BookingsHistoryView, UpdateVisitStatusView,
+    RoomManagementView, RoomConfiguratorView, BookVisitView, BookingsHistoryView, UpdateVisitStatusView,
     OwnerDashboardView, TenantRosterView, ComplaintListView, RentPaymentListView,
     DeletePropertyImageView, AnnouncementBannerView, GlobalNotificationView, HeroBannerListView, SupportInquiryView,
     SitemapXmlView, PropertyShareCardView
@@ -32,6 +32,8 @@ urlpatterns = [
     path('rentals/properties/manage/images/<int:pk>/', DeletePropertyImageView.as_view(), name='delete_property_image'),
     path('rentals/properties/<int:property_id>/rooms/', RoomManagementView.as_view(), name='room_add'),
     path('rentals/properties/<int:property_id>/rooms/<int:pk>/', RoomManagementView.as_view(), name='room_edit_delete'),
+    path('rentals/properties/<int:property_id>/room-config/', RoomConfiguratorView.as_view(), name='room_configurator'),
+
     
     # Visit Bookings & History
     path('rentals/properties/<int:property_id>/visit/', BookVisitView.as_view(), name='book_visit'),

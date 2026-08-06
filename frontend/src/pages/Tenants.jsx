@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 import api from '../api';
-import { Users, Plus, Phone, Calendar, Home, CheckCircle2, AlertCircle, ChevronDown, ChevronUp, Copy, Check, Trash2 } from 'lucide-react';
+import { 
+  Users, Plus, Phone, Calendar, Home, CheckCircle2, AlertCircle, 
+  ChevronDown, ChevronUp, Copy, Check, Trash2, Search, Building2, DoorOpen, DollarSign, MessageSquare
+} from 'lucide-react';
 
 export default function Tenants() {
   const [tenants, setTenants] = useState([]);
   const [properties, setProperties] = useState([]);
   const [rooms, setRooms] = useState([]);
   
-  // Roster Register Form State
+  // Register Form State
   const [showForm, setShowForm] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState('');
   const [selectedRoom, setSelectedRoom] = useState('');
@@ -16,11 +19,12 @@ export default function Tenants() {
   const [leaseStart, setLeaseStart] = useState('');
   const [leaseEnd, setLeaseEnd] = useState('');
 
-  // Page States
+  // Page & Search States
   const [loading, setLoading] = useState(true);
   const [formLoading, setFormLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [expandedTenants, setExpandedTenants] = useState([]);
   const [copiedPhoneId, setCopiedPhoneId] = useState(null);
@@ -50,12 +54,12 @@ export default function Tenants() {
 
   const getAvatarColor = (name) => {
     const colors = [
-      'bg-amber-100 text-amber-800 border-amber-200',
-      'bg-blue-100 text-blue-800 border-blue-200',
-      'bg-emerald-100 text-emerald-800 border-emerald-200',
-      'bg-indigo-100 text-indigo-800 border-indigo-200',
-      'bg-rose-100 text-rose-800 border-rose-200',
-      'bg-teal-100 text-teal-800 border-teal-200'
+      'bg-indigo-100 text-indigo-900 border-indigo-200',
+      'bg-blue-100 text-blue-900 border-blue-200',
+      'bg-emerald-100 text-emerald-900 border-emerald-200',
+      'bg-amber-100 text-amber-900 border-amber-200',
+      'bg-purple-100 text-purple-900 border-purple-200',
+      'bg-rose-100 text-rose-900 border-rose-200'
     ];
     let hash = 0;
     for (let i = 0; i < name.length; i++) {
@@ -137,33 +141,56 @@ export default function Tenants() {
     }
   };
 
+  // Filter tenants by name, room number, or property
+  const filteredTenants = tenants.filter(t => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    const nameMatch = t.tenant_name?.toLowerCase().includes(q);
+    const roomMatch = String(t.room_number || '').toLowerCase().includes(q);
+    const propMatch = t.property_name?.toLowerCase().includes(q);
+    const phoneMatch = t.phone?.toLowerCase().includes(q);
+    return nameMatch || roomMatch || propMatch || phoneMatch;
+  });
+
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-fadeIn">
-      {/* Header */}
-      <div className="flex justify-between items-center">
+    <div className="max-w-5xl mx-auto space-y-8 animate-fadeIn font-sans">
+      {/* Header Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-black text-slate-800 tracking-tight">Tenants Directory</h2>
-          <p className="text-sm font-semibold text-slate-400 mt-1">Register tenant bookings, occupancy agreements and room configurations</p>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Tenants Directory</h1>
+          <p className="text-xs font-semibold text-slate-400 mt-1">Register tenant bookings, occupancy agreements and room configurations</p>
         </div>
         <button 
           onClick={() => { setShowForm(!showForm); setError(''); setSuccess(''); }}
-          className="inline-flex items-center space-x-2 px-5 py-3 bg-amber-700 hover:bg-amber-800 text-white text-sm font-bold rounded-xl shadow-md transition"
+          className="inline-flex items-center space-x-2 px-5 py-3 bg-amber-700 hover:bg-amber-800 text-white text-xs font-black rounded-2xl shadow-md transition"
         >
           <Plus size={16} />
           <span>Register Tenant</span>
         </button>
       </div>
 
+      {/* Search Input Bar */}
+      <div className="relative">
+        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+        <input
+          type="text"
+          placeholder="Search tenant by name, room number (e.g. Room 101), or property..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200/90 rounded-2xl text-xs font-bold text-slate-800 shadow-xs focus:ring-2 focus:ring-amber-500 focus:outline-none transition placeholder-slate-400"
+        />
+      </div>
+
       {/* Add Tenant Expandable Form */}
       {showForm && (
-        <div className="bg-white border border-slate-100 p-6 sm:p-8 rounded-3xl shadow-md space-y-6">
+        <div className="bg-white border border-slate-200/80 p-6 sm:p-8 rounded-3xl shadow-md space-y-6 animate-scaleIn">
           <div>
-            <h3 className="text-lg font-black text-slate-800">New Tenant Registration</h3>
+            <h3 className="text-lg font-black text-slate-900">New Tenant Registration</h3>
             <p className="text-xs font-semibold text-slate-400 mt-1">Fill in the fields to assign a tenant to an active room bed</p>
           </div>
 
           {error && (
-            <div className="p-4 rounded-xl bg-red-50 text-red-700 border border-red-100 text-sm font-semibold flex items-center space-x-2">
+            <div className="p-4 rounded-2xl bg-red-50 text-red-700 border border-red-200 text-xs font-bold flex items-center space-x-2">
               <AlertCircle size={16} />
               <span>{error}</span>
             </div>
@@ -172,26 +199,26 @@ export default function Tenants() {
           <form onSubmit={handleRegisterTenant} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Select Property</label>
+                <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">Select Property *</label>
                 <select
                   required
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
+                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-extrabold outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
                   value={selectedProperty}
                   onChange={handlePropertyChange}
                 >
                   <option value="">-- Choose Property --</option>
                   {properties.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
+                    <option key={p.id} value={p.id}>{p.name} ({p.city})</option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Select Room</label>
+                <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">Select Room *</label>
                 <select
                   required
                   disabled={!selectedProperty}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition disabled:opacity-50"
+                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-extrabold outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition disabled:opacity-50"
                   value={selectedRoom}
                   onChange={(e) => setSelectedRoom(e.target.value)}
                 >
@@ -210,24 +237,24 @@ export default function Tenants() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tenant Name</label>
+                <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">Tenant Name *</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Rahul Sharma"
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
+                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-extrabold outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
                   value={tenantName}
                   onChange={(e) => setTenantName(e.target.value)}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Contact / Phone Number</label>
+                <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">Contact / Phone Number *</label>
                 <input
                   type="tel"
                   required
                   placeholder="e.g. +91 9988776655"
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
+                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-extrabold outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                 />
@@ -236,39 +263,39 @@ export default function Tenants() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Lease Start Date</label>
+                <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">Lease Start Date *</label>
                 <input
                   type="date"
                   required
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
+                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-extrabold outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
                   value={leaseStart}
                   onChange={(e) => setLeaseStart(e.target.value)}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Lease End Date (Optional)</label>
+                <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">Lease End Date (Optional)</label>
                 <input
                   type="date"
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
+                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-extrabold outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
                   value={leaseEnd}
                   onChange={(e) => setLeaseEnd(e.target.value)}
                 />
               </div>
             </div>
 
-            <div className="flex space-x-3 pt-6 border-t border-slate-100">
+            <div className="flex space-x-3 pt-4 border-t border-slate-100">
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="flex-1 py-3 border border-slate-200 rounded-xl text-slate-500 text-sm font-bold hover:bg-slate-50 transition"
+                className="flex-1 py-3 border border-slate-200 rounded-xl text-slate-600 text-xs font-extrabold hover:bg-slate-50 transition"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={formLoading}
-                className="flex-1 py-3 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-sm font-bold shadow-md transition"
+                className="flex-1 py-3 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-xs font-extrabold shadow-md transition disabled:opacity-50"
               >
                 {formLoading ? 'Registering...' : 'Register Tenant'}
               </button>
@@ -278,110 +305,158 @@ export default function Tenants() {
       )}
 
       {success && (
-        <div className="p-4 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 text-sm font-semibold flex items-center space-x-2">
+        <div className="p-4 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-extrabold flex items-center space-x-2">
           <CheckCircle2 size={16} />
           <span>{success}</span>
         </div>
       )}
 
-      {/* Roster list Grid */}
+      {/* TENANT CARDS GRID */}
       {loading ? (
-        <div className="text-center py-20 text-slate-400 font-semibold">Loading tenant directory...</div>
-      ) : tenants.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-200 text-slate-400 font-semibold text-sm">
-          No tenants currently registered. Fill out the registration form to list one.
+        <div className="text-center py-20 text-slate-400 font-bold text-xs">Loading tenant directory...</div>
+      ) : filteredTenants.length === 0 ? (
+        <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-200 text-slate-400 font-bold text-xs">
+          {searchQuery ? `No tenant found matching "${searchQuery}"` : 'No tenants currently registered. Click "+ Register Tenant" above.'}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tenants.map(tenant => {
+          {filteredTenants.map(tenant => {
             const isExpanded = expandedTenants.includes(tenant.id);
             return (
               <div 
                 key={tenant.id} 
-                onClick={() => toggleExpandTenant(tenant.id)}
-                className={`bg-white rounded-3xl border ${isExpanded ? 'border-amber-200 shadow-md ring-1 ring-amber-100/30' : 'border-slate-100 shadow-sm'} hover:shadow-md hover:border-slate-200 hover:scale-[1.01] cursor-pointer transition-all duration-300 p-6 flex flex-col justify-between space-y-3 relative overflow-hidden`}
+                className={`bg-white rounded-3xl border ${
+                  isExpanded ? 'border-amber-400 shadow-md ring-2 ring-amber-500/10' : 'border-slate-200/80 shadow-xs'
+                } hover:shadow-md hover:border-amber-300 transition-all duration-200 p-5 space-y-3 relative overflow-hidden`}
               >
-                {/* Collapsed top view */}
-                <div className="flex justify-between items-start">
+                {/* Top Header Row (Avatar, Tenant Name, Room # Pill, Property Pill & Expand Button) */}
+                <div 
+                  onClick={() => toggleExpandTenant(tenant.id)}
+                  className="flex items-start justify-between cursor-pointer group"
+                >
                   <div className="flex items-center space-x-3 min-w-0">
-                    <div className={`w-11 h-11 rounded-full border flex items-center justify-center font-extrabold text-base flex-shrink-0 shadow-inner ${getAvatarColor(tenant.tenant_name)}`}>
+                    <div className={`w-12 h-12 rounded-2xl border-2 flex items-center justify-center font-black text-lg flex-shrink-0 shadow-xs ${getAvatarColor(tenant.tenant_name)}`}>
                       {tenant.tenant_name.charAt(0).toUpperCase()}
                     </div>
+
                     <div className="min-w-0">
-                      <h3 className="font-extrabold text-slate-800 leading-tight truncate text-sm sm:text-base">
+                      <h3 className="font-extrabold text-slate-900 leading-tight truncate text-base group-hover:text-amber-800 transition">
                         {tenant.tenant_name}
                       </h3>
-                      <div className="flex items-center space-x-1.5 mt-1">
-                        <span className="px-1.5 py-0.5 text-[9px] font-bold rounded bg-amber-50 text-amber-800 border border-amber-100">
-                          Room {tenant.room_number || 'N/A'}
+                      
+                      {/* Prominent Room Number Badge */}
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span className="px-2.5 py-0.5 text-xs font-black rounded-lg bg-amber-100/90 text-amber-900 border border-amber-200/90 shadow-xs flex items-center space-x-1">
+                          <span>Room</span>
+                          <span className="font-black">{tenant.room_number || 'N/A'}</span>
                         </span>
-                        <span className="text-[9px] font-bold text-slate-400">
+                        <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
                           Occupant
                         </span>
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <span className="px-2 py-0.5 text-[9px] font-black rounded bg-slate-100 text-slate-600 border border-slate-200 truncate max-w-[80px]" title={tenant.property_name}>
+
+                  <div className="flex items-center space-x-2 flex-shrink-0">
+                    <span className="px-2.5 py-1 text-[11px] font-extrabold rounded-xl bg-slate-100 text-slate-700 border border-slate-200 truncate max-w-[100px]" title={tenant.property_name}>
                       {tenant.property_name}
                     </span>
                     <button 
                       type="button"
-                      className="text-slate-400 hover:text-slate-700 transition p-0.5 hover:bg-slate-50 rounded"
+                      className="text-slate-400 group-hover:text-amber-800 transition p-1 rounded-lg hover:bg-slate-100"
                     >
-                      {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                      {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </button>
                   </div>
                 </div>
 
-                {/* Expanded details view */}
-                <div className={`transition-all duration-300 ease-in-out overflow-hidden space-y-3 ${isExpanded ? 'max-h-60 opacity-100 mt-2' : 'max-h-0 opacity-0 pointer-events-none'}`}>
-                  <div className="h-px bg-slate-100 my-1"></div>
-                  <div className="space-y-2.5 text-xs font-semibold text-slate-600 bg-slate-50/70 p-3.5 rounded-2xl border border-slate-100 relative">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center min-w-0">
-                        <Phone size={13} className="text-slate-400 mr-2 flex-shrink-0" />
-                        <span className="truncate">Phone: {tenant.phone}</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigator.clipboard.writeText(tenant.phone);
-                          setCopiedPhoneId(tenant.id);
-                          setTimeout(() => setCopiedPhoneId(null), 2000);
-                        }}
-                        className="p-1 rounded bg-white text-slate-400 hover:text-amber-800 hover:border-amber-200 border border-slate-200 transition shadow-sm"
-                        title="Copy Phone Number"
-                      >
-                        {copiedPhoneId === tenant.id ? <Check size={11} className="text-emerald-600" /> : <Copy size={11} />}
-                      </button>
-                    </div>
+                {/* EXPANDED TENANT DETAILS PANEL */}
+                <div className={`transition-all duration-300 ease-in-out overflow-hidden space-y-3 ${isExpanded ? 'max-h-96 opacity-100 pt-2 border-t border-slate-100' : 'max-h-0 opacity-0 pointer-events-none'}`}>
+                  
+                  {/* Property & Room Details Info */}
+                  <div className="space-y-2 text-xs font-bold text-slate-700 bg-slate-50 p-3.5 rounded-2xl border border-slate-200/70">
                     
-                    <div className="flex items-center">
-                      <Calendar size={13} className="text-slate-400 mr-2" />
-                      <span>Move-in: {tenant.lease_start}</span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400 flex items-center space-x-1.5">
+                        <Building2 size={13} className="text-amber-700" />
+                        <span>Property:</span>
+                      </span>
+                      <span className="font-extrabold text-slate-900">{tenant.property_name}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400 flex items-center space-x-1.5">
+                        <DoorOpen size={13} className="text-amber-700" />
+                        <span>Room / Unit:</span>
+                      </span>
+                      <span className="font-black text-amber-900 bg-amber-100/70 px-2 py-0.5 rounded-md border border-amber-200">
+                        Room {tenant.room_number} {tenant.room_type ? `(${tenant.room_type})` : ''}
+                      </span>
+                    </div>
+
+                    {tenant.monthly_rent && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-400 flex items-center space-x-1.5">
+                          <DollarSign size={13} className="text-amber-700" />
+                          <span>Monthly Rent:</span>
+                        </span>
+                        <span className="font-black text-amber-800">₹{Number(tenant.monthly_rent).toLocaleString()}/mo</span>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between pt-1 border-t border-slate-200/50">
+                      <span className="text-slate-400 flex items-center space-x-1.5">
+                        <Phone size={13} className="text-slate-400" />
+                        <span>Contact Phone:</span>
+                      </span>
+                      <div className="flex items-center space-x-1.5">
+                        <span className="font-extrabold text-slate-900">{tenant.phone}</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(tenant.phone);
+                            setCopiedPhoneId(tenant.id);
+                            setTimeout(() => setCopiedPhoneId(null), 2000);
+                          }}
+                          className="p-1 rounded bg-white text-slate-400 hover:text-amber-800 hover:border-amber-300 border border-slate-200 transition shadow-xs"
+                          title="Copy Phone Number"
+                        >
+                          {copiedPhoneId === tenant.id ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400 flex items-center space-x-1.5">
+                        <Calendar size={13} className="text-slate-400" />
+                        <span>Lease Start:</span>
+                      </span>
+                      <span className="font-extrabold text-slate-900">{tenant.lease_start}</span>
                     </div>
 
                     {tenant.lease_end && (
-                      <div className="flex items-center">
-                        <Calendar size={13} className="text-slate-400 mr-2" />
-                        <span>Move-out: {tenant.lease_end}</span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-400 flex items-center space-x-1.5">
+                          <Calendar size={13} className="text-slate-400" />
+                          <span>Lease End:</span>
+                        </span>
+                        <span className="font-extrabold text-slate-900">{tenant.lease_end}</span>
                       </div>
                     )}
                   </div>
 
-                  <div className="flex pt-1 justify-end">
+                  {/* Actions Bar (Unregister button) */}
+                  <div className="pt-1">
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDeleteTenant(tenant.id, tenant.tenant_name);
                       }}
-                      className="w-full px-3 py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 border border-red-100 text-xs font-bold transition flex items-center justify-center space-x-1.5"
+                      className="w-full px-3 py-2.5 rounded-2xl bg-red-50 text-red-600 hover:bg-red-100 border border-red-200/80 text-xs font-black transition flex items-center justify-center space-x-1.5"
                     >
-                      <Trash2 size={12} />
+                      <Trash2 size={13} />
                       <span>Unregister Tenant</span>
                     </button>
                   </div>

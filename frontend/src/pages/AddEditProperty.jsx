@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../api';
-import { ArrowLeft, Plus, Trash2, Home, CheckCircle2, AlertCircle, Pencil } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Home, CheckCircle2, AlertCircle, Pencil, DoorOpen } from 'lucide-react';
 
 export default function AddEditProperty() {
   const { id } = useParams();
   const isEdit = !!id;
   const navigate = useNavigate();
+
 
   // Property Form State
   const [name, setName] = useState('');
@@ -299,12 +300,25 @@ export default function AddEditProperty() {
         {/* Left Form: Property Details */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white border border-slate-100 p-6 sm:p-8 rounded-3xl shadow-sm space-y-6">
-            <div>
-              <h2 className="text-2xl font-black text-slate-800">
-                {isEdit ? 'Configure Property' : 'List New Property'}
-              </h2>
-              <p className="text-xs font-semibold text-slate-400 mt-1">Configure layout, address guidelines, and visual gallery uploads</p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-black text-slate-800">
+                  {isEdit ? 'Configure Property' : 'List New Property'}
+                </h2>
+                <p className="text-xs font-semibold text-slate-400 mt-1">Configure layout, address guidelines, and visual gallery uploads</p>
+              </div>
+
+              {isEdit && (
+                <Link
+                  to={`/properties/${id}/rooms`}
+                  className="inline-flex items-center space-x-1.5 px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-xs font-bold transition shadow-sm self-start sm:self-auto"
+                >
+                  <DoorOpen size={15} />
+                  <span>Room Configurator</span>
+                </Link>
+              )}
             </div>
+
 
             {error && (
               <div className="p-4 rounded-xl bg-red-50 text-red-700 border border-red-100 text-sm font-semibold flex items-center space-x-2">

@@ -27,7 +27,7 @@ class PropertyImageSerializer(serializers.ModelSerializer):
 class RoomSerializer(serializers.ModelSerializer):
     class Meta:
         model = Room
-        fields = ['id', 'room_number', 'room_type', 'total_beds', 'occupied_beds', 'monthly_rent', 'deposit', 'furnishing', 'bathroom', 'balcony']
+        fields = ['id', 'floor', 'room_number', 'room_type', 'total_beds', 'occupied_beds', 'monthly_rent', 'deposit', 'furnishing', 'bathroom', 'balcony']
 
 import math
 
@@ -104,13 +104,16 @@ class VisitRequestSerializer(serializers.ModelSerializer):
 class TenantSerializer(serializers.ModelSerializer):
     property_name = serializers.ReadOnlyField(source='property.name')
     room_number = serializers.ReadOnlyField(source='room.room_number')
+    room_type = serializers.ReadOnlyField(source='room.room_type')
+    monthly_rent = serializers.ReadOnlyField(source='room.monthly_rent')
 
     class Meta:
         model = Tenant
         fields = [
-            'id', 'user', 'property', 'property_name', 'room', 'room_number', 
+            'id', 'user', 'property', 'property_name', 'room', 'room_number', 'room_type', 'monthly_rent',
             'tenant_name', 'phone', 'lease_start', 'lease_end', 'is_active'
         ]
+
 
 class ComplaintSerializer(serializers.ModelSerializer):
     tenant_name = serializers.ReadOnlyField(source='tenant.tenant_name')
@@ -127,13 +130,15 @@ class RentPaymentSerializer(serializers.ModelSerializer):
     tenant_name = serializers.ReadOnlyField(source='tenant.tenant_name')
     room_number = serializers.ReadOnlyField(source='tenant.room.room_number')
     tenant_phone = serializers.ReadOnlyField(source='tenant.phone')
+    property_name = serializers.ReadOnlyField(source='tenant.property.name')
 
     class Meta:
         model = RentPayment
         fields = [
-            'id', 'tenant', 'tenant_name', 'room_number', 'tenant_phone', 'amount', 
+            'id', 'tenant', 'tenant_name', 'room_number', 'tenant_phone', 'property_name', 'amount', 
             'due_date', 'payment_date', 'status'
         ]
+
 
 
 class AnnouncementBannerSerializer(serializers.ModelSerializer):

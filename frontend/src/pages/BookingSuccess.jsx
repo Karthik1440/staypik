@@ -146,26 +146,15 @@ export default function BookingSuccess() {
 
         {/* Footer Actions */}
         <div className="space-y-3 pt-2">
-          {whatsAppLink && (
-            <a 
-              href={whatsAppLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full py-3.5 rounded-2xl bg-emerald-700 text-white hover:bg-emerald-800 text-xs font-black shadow-md transition flex items-center justify-center space-x-2"
-            >
-              <MessageCircle size={16} />
-              <span>Chat on WhatsApp</span>
-            </a>
-          )}
-
           <button 
             onClick={() => navigate('/')}
-            className="w-full py-3.5 rounded-2xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-black shadow-sm transition flex items-center justify-center space-x-2"
+            className="w-full py-4 rounded-2xl bg-amber-900 hover:bg-amber-950 text-white text-xs font-black shadow-md transition flex items-center justify-center space-x-2"
           >
-            <Home size={14} />
+            <Home size={15} />
             <span>Back to Home</span>
           </button>
         </div>
+
       </div>
     </div>
   );

@@ -502,6 +502,7 @@ class RoomManagementView(APIView):
     def post(self, request, property_id):
         prop = get_object_or_404(Property, id=property_id, owner=request.user)
         
+        floor = int(request.data.get('floor', 1))
         room_number = request.data.get('room_number')
         room_type = request.data.get('room_type')
         total_beds = int(request.data.get('total_beds', 1))
@@ -517,6 +518,7 @@ class RoomManagementView(APIView):
 
         room = Room.objects.create(
             property=prop,
+            floor=floor,
             room_number=room_number,
             room_type=room_type,
             total_beds=total_beds,
@@ -539,6 +541,9 @@ class RoomManagementView(APIView):
         prop = get_object_or_404(Property, id=property_id, owner=request.user)
         room = get_object_or_404(Room, id=pk, property=prop)
         
+        floor = request.data.get('floor')
+        if floor is not None: room.floor = int(floor)
+
         room_number = request.data.get('room_number')
         if room_number is not None: room.room_number = room_number
         
@@ -574,6 +579,119 @@ class RoomManagementView(APIView):
         room = get_object_or_404(Room, id=pk, property=prop)
         room.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class RoomConfiguratorView(APIView):
+    """
+    GET: Retrieve structured floor -> room -> bed hierarchy for an owner's property.
+    """
+    permission_classes = [IsApprovedOwner]
+
+    def get(self, request, property_id):
+        prop = get_object_or_404(Property, id=property_id, owner=request.user)
+        rooms = Room.objects.filter(property=prop).order_by('floor', 'room_number')
+        tenants = Tenant.objects.filter(property=prop, is_active=True)
+
+        # Build map of tenants per room
+        room_tenants_map = {}
+        for t in tenants:
+            if t.room_id not in room_tenants_map:
+                room_tenants_map[t.room_id] = []
+            room_tenants_map[t.room_id].append(t)
+
+        total_rooms = rooms.count()
+        total_beds = 0
+        occupied_beds = 0
+
+        floors_dict = {}
+
+        for room in rooms:
+            total_beds += room.total_beds
+            assigned_tenants = room_tenants_map.get(room.id, [])
+            room_occupied_count = len(assigned_tenants)
+            # Use max of recorded occupied_beds and active tenants count
+            effective_occupied = max(room.occupied_beds, room_occupied_count)
+            occupied_beds += min(effective_occupied, room.total_beds)
+
+            # Generate Bed A, Bed B, Bed C... breakdown
+            beds = []
+            for bed_idx in range(room.total_beds):
+                bed_letter = chr(65 + bed_idx)  # A, B, C, D...
+                bed_label = f"Bed {bed_letter}"
+                
+                # Check if a tenant is assigned to this bed index
+                if bed_idx < len(assigned_tenants):
+                    tenant_obj = assigned_tenants[bed_idx]
+                    beds.append({
+                        'label': bed_label,
+                        'is_occupied': True,
+                        'tenant_id': tenant_obj.id,
+                        'tenant_name': tenant_obj.tenant_name,
+                        'tenant_phone': tenant_obj.phone
+                    })
+                elif bed_idx < effective_occupied:
+                    beds.append({
+                        'label': bed_label,
+                        'is_occupied': True,
+                        'tenant_id': None,
+                        'tenant_name': 'Occupied',
+                        'tenant_phone': ''
+                    })
+                else:
+                    beds.append({
+                        'label': bed_label,
+                        'is_occupied': False,
+                        'tenant_id': None,
+                        'tenant_name': None,
+                        'tenant_phone': ''
+                    })
+
+            room_data = {
+                'id': room.id,
+                'floor': room.floor,
+                'room_number': room.room_number,
+                'room_type': room.room_type,
+                'total_beds': room.total_beds,
+                'occupied_beds': len([b for b in beds if b['is_occupied']]),
+                'vacant_beds': room.total_beds - len([b for b in beds if b['is_occupied']]),
+                'monthly_rent': room.monthly_rent,
+                'deposit': room.deposit,
+                'furnishing': room.furnishing,
+                'bathroom': room.bathroom,
+                'balcony': room.balcony,
+                'beds': beds
+            }
+
+            floor_num = room.floor
+            if floor_num not in floors_dict:
+                floors_dict[floor_num] = {
+                    'floor_number': floor_num,
+                    'floor_name': f"Floor {floor_num}",
+                    'rooms': []
+                }
+            floors_dict[floor_num]['rooms'].append(room_data)
+
+        sorted_floors = [floors_dict[f] for f in sorted(floors_dict.keys())]
+        vacant_beds = max(0, total_beds - occupied_beds)
+
+        return Response({
+            'property': {
+                'id': prop.id,
+                'name': prop.name,
+                'property_type': prop.property_type,
+                'city': prop.city,
+                'locality': prop.locality,
+                'address': prop.address
+            },
+            'summary': {
+                'total_rooms': total_rooms,
+                'total_beds': total_beds,
+                'occupied_beds': occupied_beds,
+                'vacant_beds': vacant_beds
+            },
+            'floors': sorted_floors
+        })
+
 
 # ──────────────────────────────────────────────────────────
 # ── VISIT BOOKINGS VIEWS ──
@@ -987,10 +1105,31 @@ class RentPaymentListView(APIView):
                         due_date=next_due_date,
                         status='UNPAID'
                     )
-        else:
-            payment.save()
-
         return Response(RentPaymentSerializer(payment).data)
+
+    def delete(self, request, pk=None):
+        if request.user.role != 'OWNER':
+            return Response({'detail': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
+        if getattr(settings, 'REQUIRE_OWNER_APPROVAL', True) and (not getattr(request.user, 'owner_profile', None) or not request.user.owner_profile.is_approved):
+            return Response({'detail': 'Your owner profile is pending admin approval.'}, status=status.HTTP_403_FORBIDDEN)
+
+        payment_id = pk or request.query_params.get('id')
+        clear_paid = request.query_params.get('clear_paid') == 'true'
+
+        if clear_paid:
+            deleted_count, _ = RentPayment.objects.filter(
+                tenant__property__owner=request.user,
+                status='PAID'
+            ).delete()
+            return Response({'detail': f'Cleared {deleted_count} paid rent history records.'}, status=status.HTTP_200_OK)
+
+        if payment_id:
+            payment = get_object_or_404(RentPayment, id=payment_id, tenant__property__owner=request.user)
+            payment.delete()
+            return Response({'detail': 'Payment record deleted successfully.'}, status=status.HTTP_200_OK)
+
+        return Response({'detail': 'Specify payment_id or clear_paid=true'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class AnnouncementBannerView(APIView):

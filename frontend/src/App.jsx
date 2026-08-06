@@ -26,6 +26,7 @@ const TermsPrivacy = lazy(() => import('./pages/TermsPrivacy'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Properties = lazy(() => import('./pages/Properties'));
 const AddEditProperty = lazy(() => import('./pages/AddEditProperty'));
+const RoomConfigurator = lazy(() => import('./pages/RoomConfigurator'));
 const Tenants = lazy(() => import('./pages/Tenants'));
 const RentTracking = lazy(() => import('./pages/RentTracking'));
 
@@ -43,7 +44,8 @@ function AppContent() {
   const isPropertyDetail = location.pathname.startsWith('/property/');
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col pb-20 md:pb-0">
+    <div className={`min-h-screen bg-slate-50 flex flex-col pb-20 md:pb-0 ${mode === 'HOST' ? 'host-mode font-proxima' : ''}`}>
+
       <Header />
       <main className={`flex-grow ${isPropertyDetail ? "w-full" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full"}`}>
         <Suspense fallback={<PageLoader />}>
@@ -67,6 +69,8 @@ function AppContent() {
                 <Route path="/properties" element={<ProtectedRoute><Properties /></ProtectedRoute>} />
                 <Route path="/properties/new" element={<ProtectedRoute><AddEditProperty /></ProtectedRoute>} />
                 <Route path="/properties/edit/:id" element={<ProtectedRoute><AddEditProperty /></ProtectedRoute>} />
+                <Route path="/properties/:id/rooms" element={<ProtectedRoute><RoomConfigurator /></ProtectedRoute>} />
+                <Route path="/room-configurator" element={<ProtectedRoute><RoomConfigurator /></ProtectedRoute>} />
                 <Route path="/tenants" element={<ProtectedRoute><Tenants /></ProtectedRoute>} />
                 <Route path="/rent" element={<ProtectedRoute><RentTracking /></ProtectedRoute>} />
                 <Route path="/bookings" element={<ProtectedRoute><Bookings /></ProtectedRoute>} />
