@@ -1,17 +1,26 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
-
-@font-face {
-  font-family: 'Proxima Nova';
-  src: local('Proxima Nova Medium'), local('ProximaNova-Medium'), local('Proxima Nova Regular'), local('ProximaNova-Regular');
-  font-weight: 500;
-  font-style: normal;
-}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ===== STAYPIK PREMIUM DESIGN SYSTEM ===== */
+
+*,
+*::before,
+*::after,
+html,
+body,
+button,
+input,
+select,
+textarea,
+h1, h2, h3, h4, h5, h6,
+p, span, div, a, li, label,
+.font-proxima,
+.font-proxima * {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+}
 
 :root {
   /* Color Palette - Vibrant & Premium */
@@ -60,17 +69,9 @@
   --radius-2xl: 32px;
   --radius-full: 9999px;
 
-  --font: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  --font-host: 'Proxima Nova', 'ProximaNova-Medium', 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  --font: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-host: 'Inter', system-ui, -apple-system, sans-serif;
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-body.host-mode,
-.host-mode,
-.font-proxima,
-.host-mode *,
-.font-proxima * {
-  font-family: 'Proxima Nova', 'ProximaNova-Medium', 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif !important;
 }
 
 

@@ -180,7 +180,7 @@ export default function Home() {
       (p.property_type && p.property_type.toLowerCase().includes(s)) ||
       (p.gender && p.gender.toLowerCase().includes(s))
     );
-    const matchesSharing = !selectedSharing || (p.rooms && p.rooms.some(r => r.room_type === selectedSharing));
+    const matchesSharing = !selectedSharing || (p.rooms && p.rooms.some(r => r.room_type === selectedSharing && ((r.total_beds || 1) - (r.occupied_beds || 0)) > 0));
     return matchesSearch && matchesSharing;
   });
 
@@ -192,6 +192,24 @@ export default function Home() {
     const totalBeds = p.rooms ? p.rooms.reduce((acc, r) => acc + r.total_beds, 0) : 0;
     const occupiedBeds = p.rooms ? p.rooms.reduce((acc, r) => acc + r.occupied_beds, 0) : 0;
     return Math.max(0, totalBeds - occupiedBeds);
+  };
+
+  const getRoomTypeVacancies = (p) => {
+    if (!p?.rooms || p.rooms.length === 0) return [];
+    const map = {};
+    p.rooms.forEach(r => {
+      const type = r.room_type || 'Standard';
+      const total = r.total_beds || 1;
+      const occupied = r.occupied_beds || 0;
+      const vacant = Math.max(0, total - occupied);
+      if (!map[type]) {
+        map[type] = { type, vacant, total };
+      } else {
+        map[type].vacant += vacant;
+        map[type].total += total;
+      }
+    });
+    return Object.values(map);
   };
 
   return (
@@ -653,6 +671,24 @@ export default function Home() {
                             </div>
                           ))}
                         </div>
+
+                        {/* Room-type Vacant Beds Breakdown */}
+                        {getRoomTypeVacancies(p).length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 pt-2">
+                            {getRoomTypeVacancies(p).map(rt => (
+                              <span 
+                                key={rt.type}
+                                className={`px-2 py-0.5 text-[10px] font-extrabold rounded-md border ${
+                                  rt.vacant > 0 
+                                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+                                    : 'bg-slate-50 text-slate-400 border-slate-200 line-through'
+                                }`}
+                              >
+                                {rt.type}: {rt.vacant > 0 ? `${rt.vacant} ${p.property_type === 'Apartment' ? 'unit' : 'bed'}${rt.vacant > 1 ? 's' : ''}` : 'Full'}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
                       <div>
@@ -768,6 +804,24 @@ export default function Home() {
                                 </div>
                               ))}
                             </div>
+
+                            {/* Room-type Vacant Beds Breakdown */}
+                            {getRoomTypeVacancies(p).length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 pt-2">
+                                {getRoomTypeVacancies(p).map(rt => (
+                                  <span 
+                                    key={rt.type}
+                                    className={`px-2 py-0.5 text-[10px] font-extrabold rounded-md border ${
+                                      rt.vacant > 0 
+                                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+                                        : 'bg-slate-50 text-slate-400 border-slate-200 line-through'
+                                    }`}
+                                  >
+                                    {rt.type}: {rt.vacant > 0 ? `${rt.vacant} ${p.property_type === 'Apartment' ? 'unit' : 'bed'}${rt.vacant > 1 ? 's' : ''}` : 'Full'}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                           </div>
                           <div>
                             <div className="pt-2 border-t border-slate-50 flex items-center justify-between">

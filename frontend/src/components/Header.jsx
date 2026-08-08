@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
-import { Home, Compass, User, Calendar, LogOut, LayoutDashboard, Building, DoorOpen, Users, FileWarning, DollarSign, Bell, X, Search, Heart } from 'lucide-react';
+import { Home, Compass, User, Calendar, LogOut, Building, Bell, X, Search, Heart, DoorOpen } from 'lucide-react';
 
 export default function Header() {
   const { user, role, mode, toggleMode, logout } = useAuth();
@@ -18,6 +19,22 @@ export default function Header() {
   } = useNotifications();
   const navigate = useNavigate();
   const [showNotifs, setShowNotifs] = useState(false);
+
+  const handleRoomVacanciesClick = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await api.get('/rentals/properties/?owner=true');
+      const userProperties = res.data || [];
+      if (userProperties.length > 0) {
+        navigate(`/properties/${userProperties[0].id}/rooms`);
+      } else {
+        navigate('/properties');
+      }
+    } catch (err) {
+      console.error(err);
+      navigate('/properties');
+    }
+  };
 
   const isPropertyPage = location.pathname.startsWith('/property/');
   const isPropertyDetailPage = /^\/property\/[^/]+$/.test(location.pathname);
@@ -76,27 +93,18 @@ export default function Header() {
               <nav className="hidden md:flex space-x-8 text-sm font-semibold text-slate-600">
                 {mode === 'HOST' ? (
                   <>
-                    <Link to="/dashboard" className="flex items-center space-x-1.5 hover:text-amber-700 transition">
-                      <LayoutDashboard size={16} />
-                      <span>Dashboard</span>
-                    </Link>
-                    <Link to="/properties" className="flex items-center space-x-1.5 hover:text-amber-700 transition">
+                    <Link to="/properties" className={`flex items-center space-x-1.5 hover:text-amber-700 transition ${location.pathname === '/properties' ? 'text-amber-700 font-extrabold' : ''}`}>
                       <Building size={16} />
-                      <span>Properties</span>
+                      <span>My Properties</span>
                     </Link>
-                    <Link to="/room-configurator" className="flex items-center space-x-1.5 hover:text-amber-700 transition">
+                    <button 
+                      onClick={handleRoomVacanciesClick}
+                      className={`flex items-center space-x-1.5 hover:text-amber-700 transition ${location.pathname.includes('/rooms') ? 'text-amber-700 font-extrabold' : ''}`}
+                    >
                       <DoorOpen size={16} />
-                      <span>Room Config</span>
-                    </Link>
-                    <Link to="/tenants" className="flex items-center space-x-1.5 hover:text-amber-700 transition">
-                      <Users size={16} />
-                      <span>Tenants</span>
-                    </Link>
-                    <Link to="/rent" className="flex items-center space-x-1.5 hover:text-amber-700 transition">
-                      <DollarSign size={16} />
-                      <span>Rent Tracking</span>
-                    </Link>
-                    <Link to="/bookings" className="flex items-center space-x-1.5 hover:text-amber-700 transition">
+                      <span>Room Vacancies</span>
+                    </button>
+                    <Link to="/bookings" className={`flex items-center space-x-1.5 hover:text-amber-700 transition ${location.pathname === '/bookings' ? 'text-amber-700 font-extrabold' : ''}`}>
                       <Calendar size={16} />
                       <span>Visit Requests</span>
                     </Link>
@@ -222,27 +230,22 @@ export default function Header() {
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 py-2 z-50 shadow-lg flex justify-around items-center">
           {mode === 'HOST' ? (
             <>
-              <Link to="/dashboard" className="flex flex-col items-center text-xs font-semibold text-slate-500 hover:text-amber-700">
-                <LayoutDashboard size={20} />
-                <span className="mt-0.5">Metrics</span>
-              </Link>
-              <Link to="/properties" className="flex flex-col items-center text-xs font-semibold text-slate-500 hover:text-amber-700">
+              <Link to="/properties" className={`flex flex-col items-center text-xs font-semibold ${location.pathname === '/properties' ? 'text-amber-700 font-extrabold' : 'text-slate-500 hover:text-amber-700'}`}>
                 <Building size={20} />
                 <span className="mt-0.5">Properties</span>
               </Link>
-              <Link to="/room-configurator" className="flex flex-col items-center text-xs font-semibold text-slate-500 hover:text-amber-700">
+              <button 
+                onClick={handleRoomVacanciesClick}
+                className={`flex flex-col items-center text-xs font-semibold ${location.pathname.includes('/rooms') ? 'text-amber-700 font-extrabold' : 'text-slate-500 hover:text-amber-700'}`}
+              >
                 <DoorOpen size={20} />
                 <span className="mt-0.5">Rooms</span>
+              </button>
+              <Link to="/bookings" className={`flex flex-col items-center text-xs font-semibold ${location.pathname === '/bookings' ? 'text-amber-700 font-extrabold' : 'text-slate-500 hover:text-amber-700'}`}>
+                <Calendar size={20} />
+                <span className="mt-0.5">Visits</span>
               </Link>
-              <Link to="/tenants" className="flex flex-col items-center text-xs font-semibold text-slate-500 hover:text-amber-700">
-                <Users size={20} />
-                <span className="mt-0.5">Tenants</span>
-              </Link>
-              <Link to="/rent" className="flex flex-col items-center text-xs font-semibold text-slate-500 hover:text-amber-700">
-                <DollarSign size={20} />
-                <span className="mt-0.5">Rent</span>
-              </Link>
-              <Link to="/profile" className="flex flex-col items-center text-xs font-semibold text-slate-500 hover:text-amber-700">
+              <Link to="/profile" className={`flex flex-col items-center text-xs font-semibold ${location.pathname === '/profile' ? 'text-amber-700 font-extrabold' : 'text-slate-500 hover:text-amber-700'}`}>
                 <User size={20} />
                 <span className="mt-0.5">Profile</span>
               </Link>

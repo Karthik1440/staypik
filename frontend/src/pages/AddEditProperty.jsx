@@ -44,7 +44,22 @@ export default function AddEditProperty() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const amenitiesList = ['WiFi', 'AC', 'Attached Washroom', 'Food Included', 'Laundry Service', 'Security / CCTV', 'Power Backup', 'Gym', 'Drinking Water', 'Parking', 'Lift'];
+  const amenitiesList = [
+    'WiFi', 'AC', 'Attached Washroom', 'Laundry Service', 'Security / CCTV', 
+    'Power Backup', 'Gym', 'Drinking Water', 'Parking', 'Lift', 'TV / Refrigerator', 'Housekeeping'
+  ];
+
+  const foodOptionsList = [
+    'North Indian Food',
+    'South Indian Food',
+    'North & South Indian Food',
+    '3 Meals Daily (Breakfast, Lunch, Dinner)',
+    'Breakfast & Dinner Included',
+    'Pure Veg Food',
+    'Veg & Non-Veg Options',
+    'Self-Cooking Kitchen',
+    'No Food Included'
+  ];
 
   useEffect(() => {
     if (isEdit) {
@@ -195,16 +210,16 @@ export default function AddEditProperty() {
     e.preventDefault();
     setError('');
     
-    if (!roomNumber || !monthlyRent) {
-      alert(`${propertyType === 'Apartment' ? 'Unit/Flat number' : 'Room number'} and monthly rent are required.`);
+    if (!monthlyRent) {
+      alert("Monthly rent is required.");
       return;
     }
 
     const payload = {
-      room_number: roomNumber,
+      room_number: roomNumber || `${roomType} Option`,
       room_type: roomType,
       total_beds: propertyType === 'Apartment' ? 1 : totalBeds,
-      occupied_beds: propertyType === 'Apartment' ? 0 : occupiedBeds,
+      occupied_beds: propertyType === 'Apartment' ? 0 : Math.max(0, totalBeds - (occupiedBeds > 0 ? occupiedBeds : totalBeds)), // occupiedBeds used as vacant beds in UI
       monthly_rent: monthlyRent,
       deposit: roomDeposit || 0,
       furnishing: propertyType === 'Apartment' ? furnishing : '',
@@ -216,19 +231,19 @@ export default function AddEditProperty() {
       if (editingRoomId) {
         const res = await api.put(`/rentals/properties/${id}/rooms/${editingRoomId}/`, payload);
         setRooms(rooms.map(r => r.id === editingRoomId ? res.data : r));
-        setSuccess("Room/Unit updated successfully!");
+        setSuccess("Room type updated successfully!");
         setEditingRoomId(null);
       } else {
         const res = await api.post(`/rentals/properties/${id}/rooms/`, payload);
         setRooms([...rooms, res.data]);
-        setSuccess("Room/Unit added successfully!");
+        setSuccess("Room type added successfully!");
       }
       
       // Reset room form
       setRoomNumber('');
       setRoomType(propertyType === 'Apartment' ? '1 BHK' : 'Single');
       setTotalBeds(1);
-      setOccupiedBeds(0);
+      setOccupiedBeds(1);
       setMonthlyRent('');
       setRoomDeposit('');
       setFurnishing('Semi-Furnished');
@@ -236,16 +251,16 @@ export default function AddEditProperty() {
       setBalcony('0');
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.detail || `Failed to save room/unit. Ensure the room/flat number is unique.`);
+      setError(err.response?.data?.detail || `Failed to save room type.`);
     }
   };
 
   const handleEditClick = (room) => {
     setEditingRoomId(room.id);
-    setRoomNumber(room.room_number);
+    setRoomNumber(room.room_number || '');
     setRoomType(room.room_type);
     setTotalBeds(room.total_beds || 1);
-    setOccupiedBeds(room.occupied_beds || 0);
+    setOccupiedBeds(Math.max(0, (room.total_beds || 1) - (room.occupied_beds || 0)));
     setMonthlyRent(room.monthly_rent);
     setRoomDeposit(room.deposit || '');
     setFurnishing(room.furnishing || 'Semi-Furnished');
@@ -258,7 +273,7 @@ export default function AddEditProperty() {
     setRoomNumber('');
     setRoomType(propertyType === 'Apartment' ? '1 BHK' : 'Single');
     setTotalBeds(1);
-    setOccupiedBeds(0);
+    setOccupiedBeds(1);
     setMonthlyRent('');
     setRoomDeposit('');
     setFurnishing('Semi-Furnished');
@@ -537,9 +552,40 @@ export default function AddEditProperty() {
                 )}
               </div>
 
-              {/* Amenities checkboxes */}
+              {/* Food & Dining Options */}
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Amenities</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
+                  Food & Cuisine Options (North Indian / South Indian / Meals)
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                  {foodOptionsList.map((foodOption) => {
+                    const checked = selectedAmenities.includes(foodOption);
+                    return (
+                      <button
+                        key={foodOption}
+                        type="button"
+                        onClick={() => handleAmenityToggle(foodOption)}
+                        className={`flex items-center space-x-2.5 p-3 rounded-xl border text-left text-xs font-bold transition ${
+                          checked 
+                            ? 'bg-amber-50 border-amber-300 text-amber-900 shadow-2xs'
+                            : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                        }`}
+                      >
+                        <div className={`w-3.5 h-3.5 rounded flex items-center justify-center border text-[8px] text-white ${
+                          checked ? 'bg-amber-700 border-amber-700' : 'border-slate-300 bg-white'
+                        }`}>
+                          {checked && '✓'}
+                        </div>
+                        <span>{foodOption}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* General Amenities checkboxes */}
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">General Amenities</label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                   {amenitiesList.map((amenity) => {
                     const checked = selectedAmenities.includes(amenity);
@@ -566,263 +612,50 @@ export default function AddEditProperty() {
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-slate-100">
+              <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-6 py-3.5 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition flex items-center justify-center"
+                  className="w-full sm:w-auto px-6 py-3.5 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition flex items-center justify-center"
                 >
-                  {loading ? 'Saving Property...' : (isEdit ? 'Save Updates' : 'Add Property & Continue')}
+                  {loading ? 'Saving Property...' : (isEdit ? 'Save Property Details' : 'Add Property & Continue')}
                 </button>
+
+                {isEdit && (
+                  <Link
+                    to={`/properties/${id}/rooms`}
+                    className="w-full sm:w-auto px-5 py-3.5 bg-slate-900 hover:bg-black text-white text-xs font-black rounded-xl shadow-md transition flex items-center justify-center space-x-2"
+                  >
+                    <DoorOpen size={16} />
+                    <span>Configure Room Types</span>
+                  </Link>
+                )}
               </div>
             </form>
           </div>
-        </div>
 
-        {/* Right Form: Rooms Setup (Edit mode only) */}
-        <div className="lg:col-span-1 space-y-6">
-          {isEdit ? (
-            <div className="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm space-y-6">
+          {/* Dedicated Room Types Banner for Edit Mode */}
+          {isEdit && (
+            <div className="p-6 bg-gradient-to-r from-amber-50 via-amber-50/80 to-orange-50 rounded-3xl border border-amber-200/80 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 text-left">
               <div>
-                <h3 className="text-lg font-black text-slate-800 flex items-center">
-                  <Home size={18} className="text-amber-700 mr-2" />
-                  <span>{editingRoomId ? 'Edit Room / Unit' : 'Configure Rooms'}</span>
-                </h3>
-                <p className="text-xs font-semibold text-slate-400 mt-1">
-                  {propertyType === 'Apartment' 
-                    ? "Define flat units, configuration types, furnishing and rent" 
-                    : "Define specific PG room types, bed vacancy lists and monthly rents"}
+                <h4 className="text-base font-black text-slate-800 flex items-center">
+                  <DoorOpen size={20} className="text-amber-700 mr-2" />
+                  <span>Room Types & Bed Vacancies</span>
+                </h4>
+                <p className="text-xs font-semibold text-slate-500 mt-1">
+                  Manage available room options, monthly rents, deposits, and vacant bed counts on a dedicated page.
                 </p>
               </div>
-
-              {/* Add/Edit Room Mini Form */}
-              <form onSubmit={handleAddOrUpdateRoom} className="space-y-4 pt-4 border-t border-slate-50">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                    {propertyType === 'Apartment' ? 'Flat/Unit Number' : 'Room Number'}
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder={propertyType === 'Apartment' ? "e.g. 302" : "e.g. 101"}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
-                    value={roomNumber}
-                    onChange={(e) => setRoomNumber(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                      {propertyType === 'Apartment' ? 'BHK Type' : 'Room Type'}
-                    </label>
-                    <select
-                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
-                      value={roomType}
-                      onChange={(e) => setRoomType(e.target.value)}
-                    >
-                      {propertyType === 'Apartment' ? (
-                        <>
-                          <option value="1 BHK">1 BHK</option>
-                          <option value="2 BHK">2 BHK</option>
-                          <option value="3 BHK">3 BHK</option>
-                          <option value="4 BHK">4 BHK</option>
-                          <option value="1 RK">1 RK</option>
-                          <option value="Studio">Studio</option>
-                        </>
-                      ) : (
-                        <>
-                          <option value="Single">Single</option>
-                          <option value="Double Sharing">Double Sharing</option>
-                          <option value="Triple Sharing">Triple Sharing</option>
-                          <option value="Quad Sharing">Quad Sharing</option>
-                        </>
-                      )}
-                    </select>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Monthly Rent (₹)</label>
-                      <input
-                        type="number"
-                        required
-                        placeholder="e.g. 9000"
-                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
-                        value={monthlyRent}
-                        onChange={(e) => setMonthlyRent(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Security Deposit (₹)</label>
-                      <input
-                        type="number"
-                        placeholder="e.g. 15000"
-                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
-                        value={roomDeposit}
-                        onChange={(e) => setRoomDeposit(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {propertyType === 'Apartment' ? (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Furnishing</label>
-                      <select
-                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
-                        value={furnishing}
-                        onChange={(e) => setFurnishing(e.target.value)}
-                      >
-                        <option value="Fully Furnished">Fully Furnished</option>
-                        <option value="Semi-Furnished">Semi-Furnished</option>
-                        <option value="Unfurnished">Unfurnished</option>
-                      </select>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Bathroom</label>
-                        <select
-                          className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
-                          value={bathroom}
-                          onChange={(e) => setBathroom(e.target.value)}
-                        >
-                          <option value="1">1</option>
-                          <option value="2">2</option>
-                          <option value="3">3</option>
-                          <option value="Shared">Shared</option>
-                          <option value="Attached">Attached</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Balcony</label>
-                        <select
-                          className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
-                          value={balcony}
-                          onChange={(e) => setBalcony(e.target.value)}
-                        >
-                          <option value="0">0</option>
-                          <option value="1">1</option>
-                          <option value="2">2</option>
-                          <option value="3+">3+</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Total Beds</label>
-                      <input
-                        type="number"
-                        min={1}
-                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
-                        value={totalBeds}
-                        onChange={(e) => setTotalBeds(parseInt(e.target.value))}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Occupied Beds</label>
-                      <input
-                        type="number"
-                        min={0}
-                        max={totalBeds}
-                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-amber-700 focus:bg-white transition"
-                        value={occupiedBeds}
-                        onChange={(e) => setOccupiedBeds(parseInt(e.target.value))}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex space-x-2">
-                  {editingRoomId && (
-                    <button
-                      type="button"
-                      onClick={handleCancelEdit}
-                      className="flex-1 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-500 rounded-xl text-xs font-bold transition flex items-center justify-center"
-                    >
-                      Cancel
-                    </button>
-                  )}
-                  <button
-                    type="submit"
-                    className="flex-1 py-2.5 bg-slate-900 hover:bg-black text-white rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center space-x-1.5"
-                  >
-                    <Plus size={14} />
-                    <span>{editingRoomId ? 'Update Room/Unit' : 'Add Room/Unit'}</span>
-                  </button>
-                </div>
-              </form>
-
-              {/* Room Config List */}
-              <div className="pt-6 border-t border-slate-50 space-y-3">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Rooms roster list</h4>
-                {rooms.length === 0 ? (
-                  <p className="text-xs text-slate-400 font-semibold italic">No rooms configured yet.</p>
-                ) : (
-                  <div className="space-y-2.5">
-                    {rooms.map((room, idx) => (
-                      <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-amber-200 transition group relative">
-                        <div className="min-w-0 pr-8">
-                          <div className="text-sm font-extrabold text-slate-800">
-                            {propertyType === 'Apartment' ? `Flat/Unit ${room.room_number}` : `Room ${room.room_number}`}
-                          </div>
-                          <div className="text-[10px] text-slate-400 font-bold leading-normal">
-                            {room.room_type}
-                            {propertyType === 'Apartment' ? (
-                              <>
-                                {room.furnishing && ` • ${room.furnishing}`}
-                                {room.bathroom && ` • ${room.bathroom} Bath`}
-                                {room.balcony && ` • ${room.balcony} Balcony`}
-                              </>
-                            ) : (
-                              ` • Vacant: ${room.total_beds - room.occupied_beds}/${room.total_beds}`
-                            )}
-                            {room.deposit > 0 && ` • Deposit: ₹${Number(room.deposit).toLocaleString()}`}
-                          </div>
-                        </div>
-                        <div className="text-right flex items-center space-x-2">
-                          <div className="mr-2">
-                            <span className="text-sm font-black text-amber-700">₹{Number(room.monthly_rent).toLocaleString()}</span>
-                            <span className="text-[10px] font-bold text-slate-400">/mo</span>
-                          </div>
-                          <div className="flex space-x-1">
-                            <button
-                              type="button"
-                              onClick={() => handleEditClick(room)}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-amber-700 hover:bg-amber-50 transition"
-                              title="Edit Room/Unit"
-                            >
-                              <Pencil size={12} />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteRoom(room.id)}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition"
-                              title="Delete Room/Unit"
-                            >
-                              <Trash2 size={12} />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="bg-amber-50/60 border border-dashed border-amber-200 p-6 rounded-3xl shadow-sm text-center text-amber-900/80 space-y-3">
-              <h3 className="font-extrabold text-sm">Add Property First</h3>
-              <p className="text-xs font-semibold leading-relaxed">
-                Save your basic property details first to unlock the room and bed configuration tables panel.
-              </p>
+              <Link
+                to={`/properties/${id}/rooms`}
+                className="px-5 py-3 bg-amber-700 hover:bg-amber-800 text-white text-xs font-black rounded-xl shadow-md transition flex items-center space-x-2 flex-shrink-0"
+              >
+                <DoorOpen size={16} />
+                <span>Manage Room Types</span>
+              </Link>
             </div>
           )}
         </div>
-
       </div>
     </div>
   );

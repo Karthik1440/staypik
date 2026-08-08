@@ -14,6 +14,18 @@ export default function PropertyCard({ property }) {
   const occupiedBeds = rooms ? rooms.reduce((acc, r) => acc + r.occupied_beds, 0) : 0;
   const vacantBeds = Math.max(0, totalBeds - occupiedBeds);
 
+  const roomTypeVacancies = rooms ? Object.values(rooms.reduce((acc, r) => {
+    const type = r.room_type || 'Standard';
+    const vacant = Math.max(0, (r.total_beds || 1) - (r.occupied_beds || 0));
+    if (!acc[type]) {
+      acc[type] = { type, vacant, total: r.total_beds || 1 };
+    } else {
+      acc[type].vacant += vacant;
+      acc[type].total += (r.total_beds || 1);
+    }
+    return acc;
+  }, {})) : [];
+
   const getGenderBadgeColor = (g) => {
     switch (g) {
       case 'Boys': return 'bg-blue-50 text-blue-800 border-blue-200';
@@ -49,14 +61,14 @@ export default function PropertyCard({ property }) {
             <span>House Full</span>
           </div>
         ) : (
-          <div className="absolute bottom-4 right-4 px-3 py-1 text-xs font-bold rounded-md bg-emerald-500 text-white shadow-sm">
-            {vacantBeds} Beds Vacant
+          <div className="absolute bottom-4 right-4 px-3 py-1 text-xs font-bold rounded-md bg-emerald-600 text-white shadow-sm">
+            {vacantBeds} {property_type === 'Apartment' ? 'Flats' : 'Beds'} Vacant
           </div>
         )}
       </div>
 
       {/* Body */}
-      <div className="p-5 flex-1 flex flex-col justify-between">
+      <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
         <div>
           <div className="flex items-center text-xs font-semibold text-slate-400 mb-1">
             <MapPin size={12} className="mr-1" />
@@ -65,9 +77,27 @@ export default function PropertyCard({ property }) {
           <h3 className="font-extrabold text-slate-800 text-lg leading-snug group-hover:text-amber-700 transition duration-150">
             {name}
           </h3>
+
+          {/* Room-type vacant beds breakdown */}
+          {roomTypeVacancies.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pt-2.5">
+              {roomTypeVacancies.map(rt => (
+                <span 
+                  key={rt.type}
+                  className={`px-2 py-0.5 text-[10px] font-extrabold rounded-md border ${
+                    rt.vacant > 0 
+                      ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+                      : 'bg-slate-50 text-slate-400 border-slate-200 line-through'
+                  }`}
+                >
+                  {rt.type}: {rt.vacant > 0 ? `${rt.vacant} ${property_type === 'Apartment' ? 'unit' : 'bed'}${rt.vacant > 1 ? 's' : ''}` : 'Full'}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
-        <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between">
+        <div className="pt-3 border-t border-slate-50 flex items-center justify-between">
           <div className="flex items-baseline">
             <span className="text-xl font-black text-amber-700">₹{Number(base_rent).toLocaleString()}</span>
             <span className="text-xs font-semibold text-slate-400 ml-1">/mo</span>

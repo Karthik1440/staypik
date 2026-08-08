@@ -23,12 +23,9 @@ const Saved = lazy(() => import('./pages/Saved'));
 const TermsPrivacy = lazy(() => import('./pages/TermsPrivacy'));
 
 // Host Pages
-const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Properties = lazy(() => import('./pages/Properties'));
 const AddEditProperty = lazy(() => import('./pages/AddEditProperty'));
-const RoomConfigurator = lazy(() => import('./pages/RoomConfigurator'));
-const Tenants = lazy(() => import('./pages/Tenants'));
-const RentTracking = lazy(() => import('./pages/RentTracking'));
+const RoomTypes = lazy(() => import('./pages/RoomTypes'));
 
 function PageLoader() {
   return (
@@ -51,7 +48,7 @@ function AppContent() {
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* Public Authentication */}
-            <Route path="/login" element={user ? <Navigate to={mode === 'HOST' ? '/dashboard' : '/'} /> : <Login />} />
+            <Route path="/login" element={user ? <Navigate to={mode === 'HOST' ? '/properties' : '/'} /> : <Login />} />
             <Route path="/terms-privacy" element={<TermsPrivacy />} />
 
             {/* Shared Profile Page */}
@@ -65,18 +62,14 @@ function AppContent() {
             {mode === 'HOST' ? (
               <>
                 {/* Owner Host Panel */}
-                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/properties" element={<ProtectedRoute><Properties /></ProtectedRoute>} />
                 <Route path="/properties/new" element={<ProtectedRoute><AddEditProperty /></ProtectedRoute>} />
                 <Route path="/properties/edit/:id" element={<ProtectedRoute><AddEditProperty /></ProtectedRoute>} />
-                <Route path="/properties/:id/rooms" element={<ProtectedRoute><RoomConfigurator /></ProtectedRoute>} />
-                <Route path="/room-configurator" element={<ProtectedRoute><RoomConfigurator /></ProtectedRoute>} />
-                <Route path="/tenants" element={<ProtectedRoute><Tenants /></ProtectedRoute>} />
-                <Route path="/rent" element={<ProtectedRoute><RentTracking /></ProtectedRoute>} />
+                <Route path="/properties/:id/rooms" element={<ProtectedRoute><RoomTypes /></ProtectedRoute>} />
                 <Route path="/bookings" element={<ProtectedRoute><Bookings /></ProtectedRoute>} />
                 
-                {/* Fallback to dashboard */}
-                <Route path="*" element={<Navigate to="/dashboard" />} />
+                {/* Fallback to properties */}
+                <Route path="*" element={<Navigate to="/properties" />} />
               </>
             ) : (
               <>

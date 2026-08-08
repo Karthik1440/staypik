@@ -72,13 +72,10 @@ export default function Footer() {
                 <Link to="/profile" className="hover:text-amber-500 transition-colors">Register as Host</Link>
               </li>
               <li>
-                <Link to="/dashboard" className="hover:text-amber-500 transition-colors">Host Dashboard</Link>
+                <Link to="/properties" className="hover:text-amber-500 transition-colors">Manage Properties</Link>
               </li>
               <li>
-                <Link to="/properties" className="hover:text-amber-500 transition-colors">Manage Rooms</Link>
-              </li>
-              <li>
-                <Link to="/tenants" className="hover:text-amber-500 transition-colors">Tenant Roster</Link>
+                <Link to="/bookings" className="hover:text-amber-500 transition-colors">Visit Requests</Link>
               </li>
             </ul>
           </div>

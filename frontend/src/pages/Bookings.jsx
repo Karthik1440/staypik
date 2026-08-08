@@ -266,10 +266,10 @@ export default function Bookings() {
                       )}
                     </div>
 
-                    {visit.room_number && (
+                    {(visit.room_type || visit.room_number) && (
                       <div className="flex items-center col-span-1 sm:col-span-2 text-slate-800">
                         <Home size={14} className="text-amber-700 mr-2 flex-shrink-0" />
-                        <span>Preferred Room: <strong>{visit.room_type} (Room {visit.room_number})</strong></span>
+                        <span>Room Option: <strong>{visit.room_type || 'Standard Room'}</strong></span>
                       </div>
                     )}
 

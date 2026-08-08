@@ -126,7 +126,7 @@ export default function Profile() {
       
       const isApproved = res.data?.user?.is_owner_approved;
       if (isApproved) {
-        navigate('/dashboard');
+        navigate('/properties');
       } else {
         setProfileMessage("Owner registration successful! Your profile is pending admin approval.");
       }

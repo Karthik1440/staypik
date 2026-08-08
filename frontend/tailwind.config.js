@@ -6,6 +6,10 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['"Inter"', 'system-ui', '-apple-system', 'sans-serif'],
+        proxima: ['"Inter"', 'system-ui', '-apple-system', 'sans-serif'],
+      },
       colors: {
         primary: {
           50: '#fffbeb',

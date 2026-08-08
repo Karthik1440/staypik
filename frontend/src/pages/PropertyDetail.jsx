@@ -7,7 +7,7 @@ import {
   ArrowLeft, MapPin, ShieldCheck, Heart, Share2, 
   Wifi, Utensils, Shirt, Shield, Bath, Zap, Sparkles, Star,
   ChevronLeft, ChevronRight, User, Home, DollarSign,
-  Droplet, Car, ArrowUpDown, X, Grid, Camera, ZoomIn
+  Droplet, Car, ArrowUpDown, X, Grid, Camera, ZoomIn, Info
 } from 'lucide-react';
 
 export default function PropertyDetail() {
@@ -268,8 +268,28 @@ export default function PropertyDetail() {
     navigate(`/property/${id}/book${roomIdQuery}`);
   };
 
+  const getRoomTypeVacancies = (p) => {
+    if (!p?.rooms || p.rooms.length === 0) return [];
+    const map = {};
+    p.rooms.forEach(r => {
+      const type = r.room_type || 'Standard';
+      const total = r.total_beds || 1;
+      const occupied = r.occupied_beds || 0;
+      const vacant = Math.max(0, total - occupied);
+      if (!map[type]) {
+        map[type] = { type, vacant, total };
+      } else {
+        map[type].vacant += vacant;
+        map[type].total += total;
+      }
+    });
+    return Object.values(map);
+  };
+
   return (
     <div className="max-w-md md:max-w-6xl mx-auto bg-slate-50 min-h-screen pb-16 md:pb-12 px-0 md:px-6 pt-0 md:pt-4 text-left animate-fadeIn">
+      {/* Rest of JSX... */}
+
       <Helmet>
         <title>{shareTitle}</title>
         <meta name="description" content={shareDescription} />
@@ -592,24 +612,62 @@ export default function PropertyDetail() {
 
             <hr className="border-slate-100" />
 
-            {/* Amenities Icons Grid */}
-            <div className="space-y-3">
-              <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Amenities</h3>
-              <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-                {amenities && amenities.length > 0 ? (
-                  amenities.map((amenity, idx) => (
-                    <div key={idx} className="flex flex-col items-center justify-center p-3 rounded-2xl bg-slate-50 border border-slate-100 text-slate-600 space-y-1.5">
-                      <div className="text-amber-700">{getAmenityIcon(amenity)}</div>
-                      <span className="text-[10px] font-extrabold w-full text-center break-words">{amenity}</span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="col-span-3 md:col-span-6 text-center text-xs text-slate-400 font-semibold py-2">
-                    Standard utilities provided.
+            {/* Food & Cuisine Options Section */}
+            {(() => {
+              const foodKeywords = ['food', 'indian', 'meals', 'veg', 'kitchen', 'breakfast', 'lunch', 'dinner', 'cooking', 'dining'];
+              const foodAmenities = amenities ? amenities.filter(a => foodKeywords.some(k => a.toLowerCase().includes(k))) : [];
+              const generalAmenities = amenities ? amenities.filter(a => !foodKeywords.some(k => a.toLowerCase().includes(k))) : [];
+
+              return (
+                <>
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider flex items-center">
+                      <Utensils size={15} className="text-amber-700 mr-1.5" />
+                      <span>Food & Cuisine Options</span>
+                    </h3>
+                    {foodAmenities.length > 0 ? (
+                      <div className="flex flex-wrap gap-2.5">
+                        {foodAmenities.map((food, idx) => (
+                          <div 
+                            key={idx} 
+                            className="px-3.5 py-2 rounded-2xl bg-slate-50 text-slate-700 border border-slate-200/80 text-xs font-bold flex items-center space-x-2"
+                          >
+                            <Utensils size={14} className="text-amber-700" />
+                            <span>{food}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-3 bg-slate-50 border border-slate-100 rounded-2xl text-slate-500 font-semibold text-xs flex items-center space-x-2">
+                        <Info size={14} className="text-slate-400 flex-shrink-0" />
+                        <span>Self-cooking kitchen or nearby dining options available.</span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
+
+                  <hr className="border-slate-100" />
+
+                  {/* General Amenities Icons Grid */}
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">General Amenities</h3>
+                    <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+                      {generalAmenities.length > 0 ? (
+                        generalAmenities.map((amenity, idx) => (
+                          <div key={idx} className="flex flex-col items-center justify-center p-3 rounded-2xl bg-slate-50 border border-slate-100 text-slate-600 space-y-1.5">
+                            <div className="text-amber-700">{getAmenityIcon(amenity)}</div>
+                            <span className="text-[10px] font-extrabold w-full text-center break-words">{amenity}</span>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="col-span-3 md:col-span-6 text-center text-xs text-slate-400 font-semibold py-2">
+                          Standard utilities provided.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
 
             <hr className="border-slate-100" />
 
@@ -634,38 +692,15 @@ export default function PropertyDetail() {
 
             <hr className="border-slate-100" />
 
-            {/* Room/Apartment Types Card Selector */}
+            {/* Room/Apartment Types Section */}
             <div className="space-y-4">
               <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">
-                {property_type === 'Apartment' ? 'Apartment Types' : 'Room Types'}
+                {property_type === 'Apartment' ? 'Apartment Types & Vacancy' : 'Available Sharing & Room Types'}
               </h3>
 
-              {/* Room Type Selector Tabs */}
-              {availableRoomTypes.length > 1 && (
-                <div className="flex space-x-2 overflow-x-auto pb-1.5 hide-scrollbar flex-nowrap whitespace-nowrap">
-                  {availableRoomTypes.map((type) => {
-                    const isActive = activeRoomFilter === type;
-                    return (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() => handleRoomFilterChange(type)}
-                        className={`px-4 py-2 rounded-xl text-xs font-black border transition-all duration-150 active:scale-95 flex-shrink-0 ${
-                          isActive 
-                            ? 'bg-amber-700 border-amber-700 text-white shadow-sm'
-                            : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700'
-                        }`}
-                      >
-                        {type}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
               <div className="space-y-3">
-                {filteredRooms && filteredRooms.length > 0 ? (
-                  filteredRooms.map((room) => {
+                {rooms && rooms.length > 0 ? (
+                  rooms.map((room) => {
                     const vacant = Math.max(0, room.total_beds - room.occupied_beds);
                     const isSelected = selectedRoom?.id === room.id;
                     return (
@@ -674,26 +709,34 @@ export default function PropertyDetail() {
                         onClick={() => setSelectedRoom(room)}
                         className={`p-4 rounded-2xl border transition duration-200 cursor-pointer flex justify-between items-center ${
                           isSelected 
-                            ? 'border-amber-700 bg-amber-50/20 ring-1 ring-amber-700' 
+                            ? 'border-amber-700 bg-amber-50/30 ring-2 ring-amber-700/20 shadow-sm' 
                             : 'border-slate-100 bg-white hover:border-slate-200'
                         }`}
                       >
                         <div className="space-y-1 text-left">
-                          <p className="font-extrabold text-slate-800 text-sm">
-                            {room.room_type} {room.room_number ? (property_type === 'Apartment' ? `(Flat/Unit ${room.room_number})` : `(Room ${room.room_number})`) : ''}
-                          </p>
-                          <p className="text-[10px] md:text-xs font-bold text-slate-400">
+                          <div className="flex items-center space-x-2.5">
+                            <p className="font-black text-slate-800 text-base">
+                              {room.room_type}
+                            </p>
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border ${
+                              vacant > 0 
+                                ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+                                : 'bg-red-50 text-red-700 border-red-200'
+                            }`}>
+                              {vacant > 0 ? `${vacant} ${property_type === 'Apartment' ? 'unit' : 'bed'}${vacant > 1 ? 's' : ''} vacant` : 'Full'}
+                            </span>
+                          </div>
+                          <p className="text-[11px] font-bold text-slate-400">
                             {property_type === 'Apartment' ? (
                               <>
                                 {room.furnishing && `${room.furnishing}`}
                                 {room.bathroom && ` • ${room.bathroom} Bath`}
                                 {room.balcony && ` • ${room.balcony} Balcony`}
                                 {room.deposit > 0 && ` • Deposit: ₹${Number(room.deposit).toLocaleString()}`}
-                                {room.occupied_beds > 0 ? ' • Rented / Occupied' : ' • Available'}
                               </>
                             ) : (
                               <>
-                                {vacant === 0 ? 'No beds left' : `${vacant} bed${vacant > 1 ? 's' : ''} left`}
+                                Rent: ₹{Number(room.monthly_rent).toLocaleString()}/mo
                                 {room.deposit > 0 && ` • Deposit: ₹${Number(room.deposit).toLocaleString()}`}
                               </>
                             )}
@@ -701,11 +744,11 @@ export default function PropertyDetail() {
                         </div>
 
                         <div className="flex items-center space-x-3">
-                          <span className="font-black text-slate-800 text-sm md:text-base">₹{Number(room.monthly_rent).toLocaleString()}<span className="text-[10px] font-bold text-slate-400">/mo</span></span>
-                          <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                          <span className="font-black text-amber-700 text-base md:text-lg">₹{Number(room.monthly_rent).toLocaleString()}<span className="text-[10px] font-bold text-slate-400">/mo</span></span>
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition ${
                             isSelected ? 'border-amber-700 bg-amber-700 text-white' : 'border-slate-300 bg-white'
                           }`}>
-                            {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                            {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
                           </div>
                         </div>
                       </div>
@@ -713,9 +756,7 @@ export default function PropertyDetail() {
                   })
                 ) : (
                   <div className="p-6 text-center border border-slate-100 rounded-2xl text-slate-400 font-semibold text-xs bg-slate-50">
-                    {rooms && rooms.length > 0 
-                      ? "No rooms match your search query." 
-                      : "No rooms configured. Contact host for details."}
+                    Standard property pricing starting at ₹{Number(base_rent).toLocaleString()}/month. Contact owner for custom room availability.
                   </div>
                 )}
               </div>
