@@ -296,7 +296,7 @@ export default function Profile() {
             </div>
             <p className="text-slate-500 text-xs font-semibold leading-relaxed">
               {user?.isOwnerApproved 
-                ? "Toggle between Guest view to book visits, and Host mode to manage properties & tenants."
+                ? "Toggle between Guest view to explore listings, and Host mode to manage properties & room vacancies."
                 : "Your owner profile is currently pending review by our administrator team. You will be able to access host features once approved."
               }
             </p>

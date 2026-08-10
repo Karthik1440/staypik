@@ -56,8 +56,8 @@ class PropertyImage(models.Model):
 
 class Room(models.Model):
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='rooms')
-    floor = models.PositiveIntegerField(default=1, help_text="Floor number e.g. 1, 2, 3")
-    room_number = models.CharField(max_length=50)
+    floor = models.PositiveIntegerField(default=1, blank=True, null=True, help_text="Floor number e.g. 1, 2, 3")
+    room_number = models.CharField(max_length=50, blank=True, default='')
     room_type = models.CharField(max_length=50, help_text="e.g. Single, Double Sharing, Triple Sharing")
     total_beds = models.PositiveIntegerField(default=1)
     occupied_beds = models.PositiveIntegerField(default=0)

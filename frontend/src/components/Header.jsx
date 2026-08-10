@@ -99,15 +99,11 @@ export default function Header() {
                     </Link>
                     <button 
                       onClick={handleRoomVacanciesClick}
-                      className={`flex items-center space-x-1.5 hover:text-amber-700 transition ${location.pathname.includes('/rooms') ? 'text-amber-700 font-extrabold' : ''}`}
+                      className={`flex items-center space-x-1.5 hover:text-amber-700 transition ${location.pathname.includes('/rooms') || location.pathname === '/room-vacancies' ? 'text-amber-700 font-extrabold' : ''}`}
                     >
                       <DoorOpen size={16} />
                       <span>Room Vacancies</span>
                     </button>
-                    <Link to="/bookings" className={`flex items-center space-x-1.5 hover:text-amber-700 transition ${location.pathname === '/bookings' ? 'text-amber-700 font-extrabold' : ''}`}>
-                      <Calendar size={16} />
-                      <span>Visit Requests</span>
-                    </Link>
                   </>
                 ) : (
                   <>
@@ -236,15 +232,11 @@ export default function Header() {
               </Link>
               <button 
                 onClick={handleRoomVacanciesClick}
-                className={`flex flex-col items-center text-xs font-semibold ${location.pathname.includes('/rooms') ? 'text-amber-700 font-extrabold' : 'text-slate-500 hover:text-amber-700'}`}
+                className={`flex flex-col items-center text-xs font-semibold ${location.pathname.includes('/rooms') || location.pathname === '/room-vacancies' ? 'text-amber-700 font-extrabold' : 'text-slate-500 hover:text-amber-700'}`}
               >
                 <DoorOpen size={20} />
                 <span className="mt-0.5">Rooms</span>
               </button>
-              <Link to="/bookings" className={`flex flex-col items-center text-xs font-semibold ${location.pathname === '/bookings' ? 'text-amber-700 font-extrabold' : 'text-slate-500 hover:text-amber-700'}`}>
-                <Calendar size={20} />
-                <span className="mt-0.5">Visits</span>
-              </Link>
               <Link to="/profile" className={`flex flex-col items-center text-xs font-semibold ${location.pathname === '/profile' ? 'text-amber-700 font-extrabold' : 'text-slate-500 hover:text-amber-700'}`}>
                 <User size={20} />
                 <span className="mt-0.5">Profile</span>

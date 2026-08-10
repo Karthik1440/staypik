@@ -5,6 +5,53 @@ from .models import (
     VisitRequest, AnnouncementBanner, GlobalNotification, HeroBanner, SupportInquiry
 )
 
+from django import forms
+
+class RoomAdminForm(forms.ModelForm):
+    ROOM_TYPE_CHOICES = [
+        ('Single', 'Single'),
+        ('Double Sharing', 'Double Sharing'),
+        ('Triple Sharing', 'Triple Sharing'),
+        ('Four Sharing', 'Four Sharing'),
+        ('1 BHK', '1 BHK'),
+        ('2 BHK', '2 BHK'),
+        ('3 BHK', '3 BHK'),
+        ('4 BHK', '4 BHK'),
+        ('Studio', 'Studio'),
+    ]
+    FURNISHING_CHOICES = [
+        ('', '-- Select Furnishing --'),
+        ('Fully Furnished', 'Fully Furnished'),
+        ('Semi-Furnished', 'Semi-Furnished'),
+        ('Unfurnished', 'Unfurnished'),
+    ]
+    BATHROOM_CHOICES = [
+        ('', '-- Select Washroom --'),
+        ('Attached', 'Attached Washroom'),
+        ('Common', 'Common Washroom'),
+        ('1', '1 Washroom'),
+        ('2', '2 Washrooms'),
+        ('3', '3 Washrooms'),
+    ]
+
+    room_type = forms.ChoiceField(choices=ROOM_TYPE_CHOICES, initial='Single', help_text="Select room or flat configuration type")
+    furnishing = forms.ChoiceField(choices=FURNISHING_CHOICES, required=False)
+    bathroom = forms.ChoiceField(choices=BATHROOM_CHOICES, required=False)
+
+    class Meta:
+        model = Room
+        fields = '__all__'
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if not instance.room_number:
+            instance.room_number = instance.room_type or 'Option'
+        if not instance.floor:
+            instance.floor = 1
+        if commit:
+            instance.save()
+        return instance
+
 # Inline models for property images and rooms
 class PropertyImageInline(admin.TabularInline):
     model = PropertyImage
@@ -12,6 +59,8 @@ class PropertyImageInline(admin.TabularInline):
 
 class RoomInline(admin.TabularInline):
     model = Room
+    form = RoomAdminForm
+    fields = ('room_type', 'total_beds', 'occupied_beds', 'monthly_rent', 'deposit', 'furnishing', 'bathroom', 'balcony')
     extra = 1
 
 @admin.register(User)
@@ -41,8 +90,38 @@ class PropertyAdmin(admin.ModelAdmin):
 
 @admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
-    list_display = ('room_number', 'property', 'room_type', 'total_beds', 'occupied_beds', 'monthly_rent')
-    list_filter = ('room_type', 'property')
+    form = RoomAdminForm
+    list_display = ('property', 'room_type', 'total_beds', 'occupied_beds', 'vacant_beds', 'monthly_rent', 'deposit')
+    list_filter = ('room_type', 'property__city', 'property')
+    list_editable = ('total_beds', 'occupied_beds', 'monthly_rent', 'deposit')
+    search_fields = ('room_type', 'property__name', 'property__locality', 'property__city')
+    readonly_fields = ('vacant_beds_display',)
+
+    fieldsets = (
+        ('Property & Room Type', {
+            'fields': ('property', 'room_type')
+        }),
+        ('Capacity & Live Vacancy', {
+            'fields': ('total_beds', 'occupied_beds', 'vacant_beds_display')
+        }),
+        ('Pricing & Security Deposit', {
+            'fields': ('monthly_rent', 'deposit')
+        }),
+        ('Specifications & Amenities', {
+            'fields': ('furnishing', 'bathroom', 'balcony')
+        }),
+    )
+
+    def vacant_beds(self, obj):
+        return max(0, obj.total_beds - obj.occupied_beds)
+    vacant_beds.short_description = "Vacant Beds / Units"
+
+    def vacant_beds_display(self, obj):
+        if not obj or obj.pk is None:
+            return "Will calculate live vacancy upon saving"
+        count = max(0, obj.total_beds - obj.occupied_beds)
+        return f"{count} vacant out of {obj.total_beds} total"
+    vacant_beds_display.short_description = "Live Vacant Count"
 
 @admin.register(VisitRequest)
 class VisitRequestAdmin(admin.ModelAdmin):

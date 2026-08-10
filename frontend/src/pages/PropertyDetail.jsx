@@ -7,7 +7,7 @@ import {
   ArrowLeft, MapPin, ShieldCheck, Heart, Share2, 
   Wifi, Utensils, Shirt, Shield, Bath, Zap, Sparkles, Star,
   ChevronLeft, ChevronRight, User, Home, DollarSign,
-  Droplet, Car, ArrowUpDown, X, Grid, Camera, ZoomIn, Info
+  Droplet, Car, ArrowUpDown, X, Grid, Camera, ZoomIn, Info, DoorOpen, Plus, Minus
 } from 'lucide-react';
 
 export default function PropertyDetail() {
@@ -266,6 +266,32 @@ export default function PropertyDetail() {
     }
     const roomIdQuery = selectedRoom ? `?room_id=${selectedRoom.id}` : '';
     navigate(`/property/${id}/book${roomIdQuery}`);
+  };
+
+  const handleQuickVacantChange = async (room, delta, e) => {
+    if (e) e.stopPropagation();
+    const currentVacant = Math.max(0, (room.total_beds || 1) - (room.occupied_beds || 0));
+    const newVacant = Math.max(0, currentVacant + delta);
+    const updatedTotalBeds = Math.max(newVacant, room.total_beds || 1);
+    const newOccupied = Math.max(0, updatedTotalBeds - newVacant);
+
+    const payload = {
+      ...room,
+      total_beds: updatedTotalBeds,
+      occupied_beds: newOccupied
+    };
+
+    try {
+      const res = await api.put(`/rentals/properties/${id}/rooms/${room.id}/`, payload);
+      const updatedRooms = property.rooms.map(r => r.id === room.id ? res.data : r);
+      setProperty({ ...property, rooms: updatedRooms });
+      if (selectedRoom?.id === room.id) {
+        setSelectedRoom(res.data);
+      }
+    } catch (err) {
+      console.error("Failed to update vacancy:", err);
+      alert("Failed to update vacancy.");
+    }
   };
 
   const getRoomTypeVacancies = (p) => {
@@ -698,9 +724,20 @@ export default function PropertyDetail() {
 
             {/* Room/Apartment Types Section */}
             <div className="space-y-4">
-              <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">
-                {property_type === 'Apartment' ? 'Apartment Types & Vacancy' : 'Available Sharing & Room Types'}
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">
+                  {property_type === 'Apartment' ? 'Apartment Types & Vacancy' : 'Available Sharing & Room Types'}
+                </h3>
+                {(user?.isAdmin || user?.role === 'ADMIN' || property?.owner === user?.id) && (
+                  <button
+                    onClick={() => navigate(`/properties/${id}/rooms`)}
+                    className="text-xs font-black text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-3 py-1.5 rounded-xl transition flex items-center space-x-1"
+                  >
+                    <DoorOpen size={14} />
+                    <span>Manage Vacancies</span>
+                  </button>
+                )}
+              </div>
 
               <div className="space-y-3">
                 {rooms && rooms.length > 0 ? (
@@ -748,6 +785,28 @@ export default function PropertyDetail() {
                         </div>
 
                         <div className="flex items-center space-x-3">
+                          {(user?.isAdmin || user?.role === 'ADMIN' || property?.owner === user?.id) && (
+                            <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl border border-slate-200" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                onClick={(e) => handleQuickVacantChange(room, -1, e)}
+                                className="w-6 h-6 rounded-lg bg-white text-slate-700 font-extrabold flex items-center justify-center hover:bg-slate-200 transition text-xs shadow-2xs"
+                                title="Decrease Vacant Beds"
+                              >
+                                <Minus size={12} />
+                              </button>
+                              <span className="text-xs font-black text-slate-800 px-1.5" title="Vacant Beds">
+                                {vacant}
+                              </span>
+                              <button
+                                onClick={(e) => handleQuickVacantChange(room, 1, e)}
+                                className="w-6 h-6 rounded-lg bg-amber-700 text-white font-extrabold flex items-center justify-center hover:bg-amber-800 transition text-xs shadow-2xs"
+                                title="Increase Vacant Beds"
+                              >
+                                <Plus size={12} />
+                              </button>
+                            </div>
+                          )}
+
                           <span className="font-black text-amber-700 text-base md:text-lg">₹{Number(room.monthly_rent).toLocaleString()}<span className="text-[10px] font-bold text-slate-400">/mo</span></span>
                           <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition ${
                             isSelected ? 'border-amber-700 bg-amber-700 text-white' : 'border-slate-300 bg-white'
@@ -787,7 +846,7 @@ export default function PropertyDetail() {
               {selectedRoom && (
                 <div className="p-3 bg-amber-50/40 rounded-2xl border border-amber-100 text-left">
                   <p className="text-[10px] font-extrabold text-amber-800 uppercase tracking-wider">Selected Option</p>
-                  <p className="text-xs font-black text-slate-800 mt-0.5">{selectedRoom.room_type} {selectedRoom.room_number ? `(Unit ${selectedRoom.room_number})` : ''}</p>
+                  <p className="text-xs font-black text-slate-800 mt-0.5">{selectedRoom.room_type}</p>
                 </div>
               )}
 
