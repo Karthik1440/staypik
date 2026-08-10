@@ -817,11 +817,14 @@ class BookVisitView(APIView):
         return Response(VisitRequestSerializer(visit).data, status=status.HTTP_201_CREATED)
 
 class BookingsHistoryView(APIView):
-    """GET: User's visit history, or Owner's received requests list"""
+    """GET: User's visit history, or Owner/Admin's received requests list"""
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if request.user.role == 'OWNER':
+        is_admin = bool(request.user.is_staff or request.user.is_superuser or request.user.role == 'ADMIN')
+        if is_admin:
+            visits = VisitRequest.objects.all().order_by('-created_at')
+        elif request.user.role == 'OWNER':
             visits = VisitRequest.objects.filter(property__owner=request.user).order_by('-created_at')
         else:
             visits = VisitRequest.objects.filter(user=request.user).order_by('-created_at')
@@ -830,20 +833,21 @@ class BookingsHistoryView(APIView):
         return Response(serializer.data)
 
 class UpdateVisitStatusView(APIView):
-    """PATCH: Owner approves/completes/cancels a visit request, or Guest cancels it. DELETE: Owner or Guest clears visit request."""
+    """PATCH: Owner/Admin approves/completes/cancels a visit request, or Guest cancels it. DELETE: Owner, Admin, or Guest clears visit request."""
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, pk):
         visit = get_object_or_404(VisitRequest, id=pk)
+        is_admin = bool(request.user.is_staff or request.user.is_superuser or request.user.role == 'ADMIN')
         
-        if visit.property.owner != request.user and visit.user != request.user:
+        if visit.property.owner != request.user and visit.user != request.user and not is_admin:
             return Response({'detail': 'You do not have permission to update this visit request.'}, status=status.HTTP_403_FORBIDDEN)
         
         new_status = request.data.get('status')
         if new_status not in ['PENDING', 'APPROVED', 'COMPLETED', 'CANCELLED']:
             return Response({'detail': 'Invalid status choice.'}, status=status.HTTP_400_BAD_REQUEST)
         
-        if visit.property.owner != request.user and new_status != 'CANCELLED':
+        if visit.property.owner != request.user and not is_admin and new_status != 'CANCELLED':
             return Response({'detail': 'Guests can only cancel their own visit requests.'}, status=status.HTTP_403_FORBIDDEN)
         
         visit.status = new_status
@@ -860,11 +864,11 @@ class UpdateVisitStatusView(APIView):
                     notification_type='alert'
                 )
             else:
-                # Owner cancelled -> notify guest
+                # Owner/Admin cancelled -> notify guest
                 GlobalNotification.objects.create(
                     user=visit.user,
                     title=f"Visit Cancelled: {visit.property.name}",
-                    message=f"The host has cancelled your visit request scheduled for {visit.visit_date}.",
+                    message=f"The host/admin has cancelled your visit request scheduled for {visit.visit_date}.",
                     notification_type='alert'
                 )
         else:
@@ -880,8 +884,9 @@ class UpdateVisitStatusView(APIView):
 
     def delete(self, request, pk):
         visit = get_object_or_404(VisitRequest, id=pk)
+        is_admin = bool(request.user.is_staff or request.user.is_superuser or request.user.role == 'ADMIN')
         
-        if visit.property.owner != request.user and visit.user != request.user:
+        if visit.property.owner != request.user and visit.user != request.user and not is_admin:
             return Response({'detail': 'You do not have permission to delete this visit request.'}, status=status.HTTP_403_FORBIDDEN)
         
         visit.delete()
@@ -892,35 +897,59 @@ class UpdateVisitStatusView(APIView):
 # ──────────────────────────────────────────────────────────
 
 class OwnerDashboardView(APIView):
-    """GET: Analytical overview modules of owner properties"""
+    """GET: Analytical overview modules of owner or admin properties"""
     permission_classes = [IsApprovedOwner]
 
     def get(self, request):
-        if request.user.role != 'OWNER':
-            return Response({'detail': 'Only owners can access dashboard'}, status=status.HTTP_403_FORBIDDEN)
+        is_admin = bool(request.user.is_staff or request.user.is_superuser or request.user.role == 'ADMIN')
+        if request.user.role != 'OWNER' and not is_admin:
+            return Response({'detail': 'Only owners or admins can access dashboard'}, status=status.HTTP_403_FORBIDDEN)
 
-        properties = Property.objects.filter(owner=request.user)
-        total_properties = properties.count()
+        if is_admin:
+            properties = Property.objects.all()
+            total_properties = properties.count()
 
-        rooms = Room.objects.filter(property__owner=request.user)
-        total_rooms = rooms.count()
+            rooms = Room.objects.all()
+            total_rooms = rooms.count()
 
-        metrics = rooms.aggregate(
-            total_beds=Sum('total_beds'),
-            occupied_beds=Sum('occupied_beds')
-        )
+            metrics = rooms.aggregate(
+                total_beds=Sum('total_beds'),
+                occupied_beds=Sum('occupied_beds')
+            )
 
-        total_beds = metrics.get('total_beds') or 0
-        occupied_beds = metrics.get('occupied_beds') or 0
-        vacant_beds = max(0, total_beds - occupied_beds)
+            total_beds = metrics.get('total_beds') or 0
+            occupied_beds = metrics.get('occupied_beds') or 0
+            vacant_beds = max(0, total_beds - occupied_beds)
 
-        active_tenants = Tenant.objects.filter(property__owner=request.user, is_active=True).count()
-        open_complaints = Complaint.objects.filter(property__owner=request.user, status='OPEN').count()
-        due_rent_count = RentPayment.objects.filter(
-            tenant__property__owner=request.user,
-            tenant__is_active=True,
-            status__in=['UNPAID', 'OVERDUE']
-        ).count()
+            active_tenants = Tenant.objects.filter(is_active=True).count()
+            open_complaints = Complaint.objects.filter(status='OPEN').count()
+            due_rent_count = RentPayment.objects.filter(
+                tenant__is_active=True,
+                status__in=['UNPAID', 'OVERDUE']
+            ).count()
+        else:
+            properties = Property.objects.filter(owner=request.user)
+            total_properties = properties.count()
+
+            rooms = Room.objects.filter(property__owner=request.user)
+            total_rooms = rooms.count()
+
+            metrics = rooms.aggregate(
+                total_beds=Sum('total_beds'),
+                occupied_beds=Sum('occupied_beds')
+            )
+
+            total_beds = metrics.get('total_beds') or 0
+            occupied_beds = metrics.get('occupied_beds') or 0
+            vacant_beds = max(0, total_beds - occupied_beds)
+
+            active_tenants = Tenant.objects.filter(property__owner=request.user, is_active=True).count()
+            open_complaints = Complaint.objects.filter(property__owner=request.user, status='OPEN').count()
+            due_rent_count = RentPayment.objects.filter(
+                tenant__property__owner=request.user,
+                tenant__is_active=True,
+                status__in=['UNPAID', 'OVERDUE']
+            ).count()
 
         return Response({
             'total_properties': total_properties,
@@ -934,18 +963,23 @@ class OwnerDashboardView(APIView):
         })
 
 class TenantRosterView(APIView):
-    """GET/POST: List and register tenants (Owner only)"""
+    """GET/POST: List and register tenants (Owner or Admin)"""
     permission_classes = [IsApprovedOwner]
 
     def get(self, request):
-        if request.user.role != 'OWNER':
-            return Response({'detail': 'Forbidden'}, status=status.HTTP_43_FORBIDDEN)
+        is_admin = bool(request.user.is_staff or request.user.is_superuser or request.user.role == 'ADMIN')
+        if request.user.role != 'OWNER' and not is_admin:
+            return Response({'detail': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
         
-        tenants = Tenant.objects.filter(property__owner=request.user, is_active=True).order_by('-lease_start')
+        if is_admin:
+            tenants = Tenant.objects.filter(is_active=True).order_by('-lease_start')
+        else:
+            tenants = Tenant.objects.filter(property__owner=request.user, is_active=True).order_by('-lease_start')
         return Response(TenantSerializer(tenants, many=True).data)
 
     def post(self, request):
-        if request.user.role != 'OWNER':
+        is_admin = bool(request.user.is_staff or request.user.is_superuser or request.user.role == 'ADMIN')
+        if request.user.role != 'OWNER' and not is_admin:
             return Response({'detail': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
 
         property_id = request.data.get('property')
@@ -958,7 +992,10 @@ class TenantRosterView(APIView):
         if not all([property_id, room_id, tenant_name, phone, lease_start]):
             return Response({'detail': 'Mandatory tenant details missing'}, status=status.HTTP_400_BAD_REQUEST)
 
-        prop = get_object_or_404(Property, id=property_id, owner=request.user)
+        if is_admin:
+            prop = get_object_or_404(Property, id=property_id)
+        else:
+            prop = get_object_or_404(Property, id=property_id, owner=request.user)
         room = get_object_or_404(Room, id=room_id, property=prop)
 
         # Check room vacancy
@@ -989,14 +1026,18 @@ class TenantRosterView(APIView):
         return Response(TenantSerializer(tenant).data, status=status.HTTP_201_CREATED)
 
     def delete(self, request, pk=None):
-        if request.user.role != 'OWNER':
+        is_admin = bool(request.user.is_staff or request.user.is_superuser or request.user.role == 'ADMIN')
+        if request.user.role != 'OWNER' and not is_admin:
             return Response({'detail': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
         
         tenant_id = pk or request.query_params.get('id')
         if not tenant_id:
             return Response({'detail': 'Tenant ID is required'}, status=status.HTTP_400_BAD_REQUEST)
             
-        tenant = get_object_or_404(Tenant, id=tenant_id, property__owner=request.user)
+        if is_admin:
+            tenant = get_object_or_404(Tenant, id=tenant_id)
+        else:
+            tenant = get_object_or_404(Tenant, id=tenant_id, property__owner=request.user)
         
         # Decrement occupied beds of the room if it was active
         if tenant.is_active and tenant.room:
@@ -1024,7 +1065,10 @@ class ComplaintListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if request.user.role == 'OWNER':
+        is_admin = bool(request.user.is_staff or request.user.is_superuser or request.user.role == 'ADMIN')
+        if is_admin:
+            complaints = Complaint.objects.filter(tenant__is_active=True).order_by('-created_at')
+        elif request.user.role == 'OWNER':
             if getattr(settings, 'REQUIRE_OWNER_APPROVAL', True) and (not getattr(request.user, 'owner_profile', None) or not request.user.owner_profile.is_approved):
                 return Response({'detail': 'Your owner profile is pending admin approval.'}, status=status.HTTP_403_FORBIDDEN)
             complaints = Complaint.objects.filter(property__owner=request.user, tenant__is_active=True).order_by('-created_at')
@@ -1065,13 +1109,18 @@ class ComplaintListView(APIView):
         return Response(ComplaintSerializer(complaint).data, status=status.HTTP_201_CREATED)
 
     def patch(self, request, pk):
-        # Update complaint status (Owner only)
-        if request.user.role != 'OWNER':
+        # Update complaint status (Owner or Admin)
+        is_admin = bool(request.user.is_staff or request.user.is_superuser or request.user.role == 'ADMIN')
+        if request.user.role != 'OWNER' and not is_admin:
             return Response({'detail': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
-        if getattr(settings, 'REQUIRE_OWNER_APPROVAL', True) and (not getattr(request.user, 'owner_profile', None) or not request.user.owner_profile.is_approved):
-            return Response({'detail': 'Your owner profile is pending admin approval.'}, status=status.HTTP_403_FORBIDDEN)
 
-        complaint = get_object_or_404(Complaint, id=pk, property__owner=request.user)
+        if is_admin:
+            complaint = get_object_or_404(Complaint, id=pk)
+        else:
+            if getattr(settings, 'REQUIRE_OWNER_APPROVAL', True) and (not getattr(request.user, 'owner_profile', None) or not request.user.owner_profile.is_approved):
+                return Response({'detail': 'Your owner profile is pending admin approval.'}, status=status.HTTP_403_FORBIDDEN)
+            complaint = get_object_or_404(Complaint, id=pk, property__owner=request.user)
+
         new_status = request.data.get('status')
         if new_status in ['OPEN', 'IN_PROGRESS', 'RESOLVED']:
             complaint.status = new_status
@@ -1093,7 +1142,10 @@ class RentPaymentListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if request.user.role == 'OWNER':
+        is_admin = bool(request.user.is_staff or request.user.is_superuser or request.user.role == 'ADMIN')
+        if is_admin:
+            payments = RentPayment.objects.filter(tenant__is_active=True).order_by('-due_date')
+        elif request.user.role == 'OWNER':
             if getattr(settings, 'REQUIRE_OWNER_APPROVAL', True) and (not getattr(request.user, 'owner_profile', None) or not request.user.owner_profile.is_approved):
                 return Response({'detail': 'Your owner profile is pending admin approval.'}, status=status.HTTP_403_FORBIDDEN)
             payments = RentPayment.objects.filter(tenant__property__owner=request.user, tenant__is_active=True).order_by('-due_date')
@@ -1103,16 +1155,20 @@ class RentPaymentListView(APIView):
         return Response(RentPaymentSerializer(payments, many=True).data)
 
     def post(self, request):
-        # Owner records payment manually
-        if request.user.role != 'OWNER':
+        # Owner or Admin records payment manually
+        is_admin = bool(request.user.is_staff or request.user.is_superuser or request.user.role == 'ADMIN')
+        if request.user.role != 'OWNER' and not is_admin:
             return Response({'detail': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
-        if getattr(settings, 'REQUIRE_OWNER_APPROVAL', True) and (not getattr(request.user, 'owner_profile', None) or not request.user.owner_profile.is_approved):
-            return Response({'detail': 'Your owner profile is pending admin approval.'}, status=status.HTTP_403_FORBIDDEN)
 
         payment_id = request.data.get('payment_id')
         pay_status = request.data.get('status', 'PAID')
 
-        payment = get_object_or_404(RentPayment, id=payment_id, tenant__property__owner=request.user)
+        if is_admin:
+            payment = get_object_or_404(RentPayment, id=payment_id)
+        else:
+            if getattr(settings, 'REQUIRE_OWNER_APPROVAL', True) and (not getattr(request.user, 'owner_profile', None) or not request.user.owner_profile.is_approved):
+                return Response({'detail': 'Your owner profile is pending admin approval.'}, status=status.HTTP_403_FORBIDDEN)
+            payment = get_object_or_404(RentPayment, id=payment_id, tenant__property__owner=request.user)
         
         # Check if it was not already paid to prevent double triggering next invoice
         already_paid = payment.status == 'PAID'

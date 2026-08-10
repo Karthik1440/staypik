@@ -63,6 +63,7 @@ function AppContent() {
             <Route path="/properties/new" element={<ProtectedRoute><AddEditProperty /></ProtectedRoute>} />
             <Route path="/properties/edit/:id" element={<ProtectedRoute><AddEditProperty /></ProtectedRoute>} />
             <Route path="/properties/:id/rooms" element={<ProtectedRoute><RoomTypes /></ProtectedRoute>} />
+            <Route path="/room-vacancies" element={<ProtectedRoute><RoomTypes /></ProtectedRoute>} />
 
             {/* Conditionally render Guest vs Host routes */}
             {mode === 'HOST' || user?.isAdmin ? (

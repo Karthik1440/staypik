@@ -27,8 +27,31 @@ export default function RoomTypes() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    fetchProperty();
+    if (id) {
+      fetchProperty();
+    } else {
+      fetchAllProperties();
+    }
   }, [id]);
+
+  const fetchAllProperties = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get('/rentals/properties/?owner=true');
+      const list = res.data || [];
+      setAllProperties(list);
+      if (list.length > 0) {
+        navigate(`/properties/${list[0].id}/rooms`, { replace: true });
+      } else {
+        setError("No properties found to manage room vacancies.");
+      }
+    } catch (e) {
+      console.error(e);
+      setError("Failed to load properties list.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchProperty = async () => {
     setLoading(true);
