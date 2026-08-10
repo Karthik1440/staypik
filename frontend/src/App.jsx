@@ -58,15 +58,22 @@ function AppContent() {
               </ProtectedRoute>
             } />
 
+            {/* Property Management Routes (Accessible to Owners and Admins) */}
+            <Route path="/properties" element={<ProtectedRoute><Properties /></ProtectedRoute>} />
+            <Route path="/properties/new" element={<ProtectedRoute><AddEditProperty /></ProtectedRoute>} />
+            <Route path="/properties/edit/:id" element={<ProtectedRoute><AddEditProperty /></ProtectedRoute>} />
+            <Route path="/properties/:id/rooms" element={<ProtectedRoute><RoomTypes /></ProtectedRoute>} />
+
             {/* Conditionally render Guest vs Host routes */}
-            {mode === 'HOST' ? (
+            {mode === 'HOST' || user?.isAdmin ? (
               <>
-                {/* Owner Host Panel */}
-                <Route path="/properties" element={<ProtectedRoute><Properties /></ProtectedRoute>} />
-                <Route path="/properties/new" element={<ProtectedRoute><AddEditProperty /></ProtectedRoute>} />
-                <Route path="/properties/edit/:id" element={<ProtectedRoute><AddEditProperty /></ProtectedRoute>} />
-                <Route path="/properties/:id/rooms" element={<ProtectedRoute><RoomTypes /></ProtectedRoute>} />
+                {/* Owner Host / Admin Panel */}
                 <Route path="/bookings" element={<ProtectedRoute><Bookings /></ProtectedRoute>} />
+                <Route path="/" element={<Home />} />
+                <Route path="/property/:id" element={<PropertyDetail />} />
+                <Route path="/property/:id/book" element={<ProtectedRoute><VisitBooking /></ProtectedRoute>} />
+                <Route path="/property/:id/success" element={<ProtectedRoute><BookingSuccess /></ProtectedRoute>} />
+                <Route path="/saved" element={<Saved />} />
                 
                 {/* Fallback to properties */}
                 <Route path="*" element={<Navigate to="/properties" />} />

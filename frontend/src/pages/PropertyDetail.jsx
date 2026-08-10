@@ -349,6 +349,15 @@ export default function PropertyDetail() {
         </button>
 
         <div className="flex items-center space-x-3">
+          {(user?.isAdmin || user?.role === 'ADMIN' || property?.owner === user?.id) && (
+            <button 
+              onClick={() => navigate(`/properties/edit/${id}`)}
+              className="flex items-center space-x-1.5 px-4 py-1.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-xs font-black text-white transition shadow-sm"
+            >
+              <span>Edit Property</span>
+            </button>
+          )}
+
           <button 
             onClick={() => toggleFavorite(Number(id))}
             className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 text-xs font-extrabold text-slate-700 transition shadow-sm"
@@ -379,54 +388,40 @@ export default function PropertyDetail() {
           className="col-span-2 h-full relative overflow-hidden cursor-pointer group/item"
           onClick={() => openLightbox(0)}
         >
-          <img 
-            src={coverImage} 
-            alt={name} 
-            className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500" 
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity flex items-end p-4">
-            <span className="text-white text-xs font-black flex items-center space-x-1.5 bg-slate-900/60 backdrop-blur-sm px-3 py-1.5 rounded-xl">
+          <img src={coverImage} alt={name} className="w-full h-full object-cover group-hover/item:scale-105 transition duration-500" />
+          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover/item:opacity-100 transition flex items-center justify-center">
+            <span className="bg-slate-900/80 text-white text-xs font-bold px-3.5 py-2 rounded-xl backdrop-blur-sm flex items-center gap-1.5">
               <ZoomIn size={14} />
-              <span>Click to view full photo</span>
+              <span>Expand Gallery</span>
             </span>
           </div>
         </div>
 
-        {/* Right Stacked Thumbnail Grid */}
-        <div className="col-span-1 grid grid-rows-2 gap-3 h-full">
-          <div 
-            className="h-full relative overflow-hidden cursor-pointer group/item bg-slate-300"
-            onClick={() => openLightbox(images && images.length > 1 ? 1 : 0)}
-          >
-            <img 
-              src={images && images.length > 1 ? images[1].image : coverImage} 
-              alt={`${name} preview 2`} 
-              className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500" 
-            />
-          </div>
-          <div 
-            className="h-full relative overflow-hidden cursor-pointer group/item bg-slate-300"
-            onClick={() => openLightbox(images && images.length > 2 ? 2 : 0)}
-          >
-            <img 
-              src={images && images.length > 2 ? images[2].image : coverImage} 
-              alt={`${name} preview 3`} 
-              className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-500" 
-            />
-            {images && images.length > 3 && (
-              <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center text-white font-black text-sm">
-                +{images.length - 2} Photos
+        {/* Side Stack Images */}
+        <div className="grid grid-rows-2 gap-3 h-full">
+          {images && images.length > 1 ? (
+            images.slice(1, 3).map((img, idx) => (
+              <div 
+                key={img.id || idx} 
+                className="h-full relative overflow-hidden cursor-pointer group/sub"
+                onClick={() => openLightbox(idx + 1)}
+              >
+                <img src={img.image} alt={name} className="w-full h-full object-cover group-hover/sub:scale-105 transition duration-500" />
               </div>
-            )}
-          </div>
+            ))
+          ) : (
+            <div className="h-full bg-slate-100 flex items-center justify-center text-slate-400 text-xs font-bold">
+              No Additional Photos
+            </div>
+          )}
         </div>
 
-        {/* Floating View All Photos Button */}
-        <button
+        {/* View All Photos Badge Button */}
+        <button 
           onClick={() => openLightbox(0)}
-          className="absolute bottom-4 right-4 bg-white/90 hover:bg-white text-slate-800 text-xs font-black px-4 py-2.5 rounded-2xl shadow-xl backdrop-blur-md transition-all active:scale-95 flex items-center space-x-2 z-20 border border-slate-200/50"
+          className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-xs text-slate-800 font-extrabold text-xs px-4 py-2.5 rounded-2xl shadow-md border border-slate-200 flex items-center space-x-2 hover:bg-white hover:scale-102 active:scale-95 transition"
         >
-          <Camera size={16} className="text-amber-700" />
+          <Grid size={15} />
           <span>View All Photos ({images && images.length > 0 ? images.length : 1})</span>
         </button>
       </div>
@@ -449,7 +444,16 @@ export default function PropertyDetail() {
             <ArrowLeft size={20} className="stroke-[2.5px]" />
           </button>
           
-          <div className="flex space-x-2">
+          <div className="flex space-x-2 items-center">
+            {(user?.isAdmin || user?.role === 'ADMIN' || property?.owner === user?.id) && (
+              <button 
+                onClick={() => navigate(`/properties/edit/${id}`)}
+                className="px-3 py-2 rounded-full bg-amber-700 backdrop-blur-sm text-white text-xs font-black flex items-center justify-center hover:bg-amber-800 transition active:scale-90 shadow-md"
+                title="Edit Property"
+              >
+                Edit
+              </button>
+            )}
             <button 
               onClick={() => toggleFavorite(Number(id))}
               className="w-10 h-10 rounded-full bg-[#1E293B]/40 backdrop-blur-sm text-white flex items-center justify-center hover:bg-[#1E293B]/60 transition active:scale-90"

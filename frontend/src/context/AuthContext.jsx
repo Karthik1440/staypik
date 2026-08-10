@@ -33,22 +33,25 @@ export function AuthProvider({ children }) {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
       const userData = res.data.user;
+      const isAdmin = !!(userData.is_admin || userData.is_staff || userData.is_superuser || userData.role === 'ADMIN');
       setRole(userData.role);
       
       setUser(prev => {
         if (!prev) return null;
         return {
           ...prev,
+          id: userData.id,
           displayName: userData.display_name,
           avatar: userData.avatar,
           isOwnerApproved: userData.is_owner_approved,
+          isAdmin,
         };
       });
 
       // Auto-set mode based on role or user choice
       const savedMode = localStorage.getItem('staypik_mode');
-      if (userData.role === 'OWNER' && savedMode === 'HOST' && userData.is_owner_approved) {
-        setMode('HOST');
+      if (isAdmin || (userData.role === 'OWNER' && savedMode === 'HOST' && userData.is_owner_approved)) {
+        setMode(savedMode === 'HOST' ? 'HOST' : (isAdmin ? 'HOST' : 'GUEST'));
       } else {
         setMode('GUEST');
       }
@@ -75,18 +78,21 @@ export function AuthProvider({ children }) {
           localStorage.setItem('staypik_access_token', tokens.access);
           localStorage.setItem('staypik_refresh_token', tokens.refresh);
           
+          const isAdmin = !!(djangoUser.is_admin || djangoUser.is_staff || djangoUser.is_superuser || djangoUser.role === 'ADMIN');
           setUser({
+            id: djangoUser.id,
             uid: firebaseUser.uid,
             email: firebaseUser.email,
             displayName: djangoUser.display_name,
             avatar: djangoUser.avatar,
             isOwnerApproved: djangoUser.is_owner_approved,
+            isAdmin,
           });
           setRole(djangoUser.role);
 
           const savedMode = localStorage.getItem('staypik_mode') || 'GUEST';
-          if (djangoUser.role === 'OWNER' && djangoUser.is_owner_approved) {
-            setMode(savedMode);
+          if (isAdmin || (djangoUser.role === 'OWNER' && djangoUser.is_owner_approved)) {
+            setMode(isAdmin ? 'HOST' : savedMode);
           } else {
             setMode('GUEST');
           }
@@ -126,18 +132,21 @@ export function AuthProvider({ children }) {
     localStorage.setItem('staypik_access_token', tokens.access);
     localStorage.setItem('staypik_refresh_token', tokens.refresh);
     
+    const isAdmin = !!(djangoUser.is_admin || djangoUser.is_staff || djangoUser.is_superuser || djangoUser.role === 'ADMIN');
     setUser({
+      id: djangoUser.id,
       uid: djangoUser.username,
       email: djangoUser.email,
       displayName: djangoUser.display_name,
       avatar: djangoUser.avatar,
       isOwnerApproved: djangoUser.is_owner_approved,
+      isAdmin,
     });
     setRole(djangoUser.role);
 
     const savedMode = localStorage.getItem('staypik_mode') || 'GUEST';
-    if (djangoUser.role === 'OWNER' && djangoUser.is_owner_approved) {
-      setMode(savedMode);
+    if (isAdmin || (djangoUser.role === 'OWNER' && djangoUser.is_owner_approved)) {
+      setMode(isAdmin ? 'HOST' : savedMode);
     } else {
       setMode('GUEST');
     }
@@ -150,8 +159,8 @@ export function AuthProvider({ children }) {
   };
 
   const toggleMode = () => {
-    if (role !== 'OWNER') return;
-    if (user && !user.isOwnerApproved) {
+    if (role !== 'OWNER' && !user?.isAdmin) return;
+    if (user && !user.isOwnerApproved && !user.isAdmin) {
       alert("Your owner profile is currently pending admin approval. You cannot access host mode yet.");
       return;
     }

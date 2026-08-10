@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../api';
-import { ArrowLeft, Plus, Trash2, Home, CheckCircle2, AlertCircle, Pencil, DoorOpen } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { ArrowLeft, Plus, Trash2, Home, CheckCircle2, AlertCircle, Pencil, DoorOpen, Shield } from 'lucide-react';
 
 export default function AddEditProperty() {
+  const { user } = useAuth();
   const { id } = useParams();
   const isEdit = !!id;
   const navigate = useNavigate();
@@ -24,6 +26,11 @@ export default function AddEditProperty() {
   const [existingImages, setExistingImages] = useState([]);
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
+
+  // Admin status state
+  const [isActive, setIsActive] = useState(true);
+  const [isVerified, setIsVerified] = useState(false);
+  const [isFeatured, setIsFeatured] = useState(false);
 
   // Room Form State (For Edit mode only)
   const [rooms, setRooms] = useState([]);
@@ -86,6 +93,9 @@ export default function AddEditProperty() {
       setExistingImages(prop.images || []);
       setLatitude(prop.latitude || '');
       setLongitude(prop.longitude || '');
+      setIsActive(prop.is_active ?? true);
+      setIsVerified(prop.is_verified ?? false);
+      setIsFeatured(prop.is_featured ?? false);
       if (prop.property_type === 'Apartment') {
         setRoomType('1 BHK');
       }
@@ -152,6 +162,12 @@ export default function AddEditProperty() {
     formData.append('amenities', JSON.stringify(selectedAmenities));
     if (latitude) formData.append('latitude', latitude);
     if (longitude) formData.append('longitude', longitude);
+
+    if (user?.isAdmin) {
+      formData.append('is_active', isActive);
+      formData.append('is_verified', isVerified);
+      formData.append('is_featured', isFeatured);
+    }
 
     for (let i = 0; i < imageFiles.length; i++) {
       formData.append('images', imageFiles[i]);
@@ -333,6 +349,55 @@ export default function AddEditProperty() {
                 </Link>
               )}
             </div>
+
+            {user?.isAdmin && (
+              <div className="bg-amber-50/90 border border-amber-200 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center space-x-2 text-amber-900 font-extrabold text-sm">
+                  <Shield size={18} className="text-amber-700" />
+                  <span>Admin Controls & Status Flags</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <label className="flex items-center space-x-2.5 bg-white px-3.5 py-2.5 rounded-xl border border-amber-200 cursor-pointer shadow-2xs">
+                    <input
+                      type="checkbox"
+                      checked={isVerified}
+                      onChange={(e) => setIsVerified(e.target.checked)}
+                      className="w-4 h-4 text-amber-700 rounded focus:ring-amber-500"
+                    />
+                    <div>
+                      <span className="text-xs font-black text-slate-800 block">Verified Badge</span>
+                      <span className="text-[10px] font-semibold text-slate-400 block">Mark listing as verified</span>
+                    </div>
+                  </label>
+
+                  <label className="flex items-center space-x-2.5 bg-white px-3.5 py-2.5 rounded-xl border border-amber-200 cursor-pointer shadow-2xs">
+                    <input
+                      type="checkbox"
+                      checked={isActive}
+                      onChange={(e) => setIsActive(e.target.checked)}
+                      className="w-4 h-4 text-amber-700 rounded focus:ring-amber-500"
+                    />
+                    <div>
+                      <span className="text-xs font-black text-slate-800 block">Active Status</span>
+                      <span className="text-[10px] font-semibold text-slate-400 block">Visible to public guests</span>
+                    </div>
+                  </label>
+
+                  <label className="flex items-center space-x-2.5 bg-white px-3.5 py-2.5 rounded-xl border border-amber-200 cursor-pointer shadow-2xs">
+                    <input
+                      type="checkbox"
+                      checked={isFeatured}
+                      onChange={(e) => setIsFeatured(e.target.checked)}
+                      className="w-4 h-4 text-amber-700 rounded focus:ring-amber-500"
+                    />
+                    <div>
+                      <span className="text-xs font-black text-slate-800 block">Featured Listing</span>
+                      <span className="text-[10px] font-semibold text-slate-400 block">Highlight on home page</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            )}
 
 
             {error && (

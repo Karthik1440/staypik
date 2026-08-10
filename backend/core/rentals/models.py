@@ -32,10 +32,10 @@ class Property(models.Model):
     address = models.TextField()
     locality = models.CharField(max_length=100)
     city = models.CharField(max_length=100)
-    description = models.TextField()
+    description = models.TextField(blank=True)
     base_rent = models.DecimalField(max_digits=10, decimal_places=2)
     deposit = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    amenities = models.JSONField(default=list)  # e.g., ["WiFi", "AC", "Laundry"]
+    amenities = models.JSONField(default=list, blank=True)  # e.g., ["WiFi", "AC", "Laundry"]
     is_active = models.BooleanField(default=True)
     is_verified = models.BooleanField(default=False)
     is_featured = models.BooleanField(default=False)

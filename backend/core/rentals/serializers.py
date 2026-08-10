@@ -3,16 +3,20 @@ from .models import User, OwnerProfile, Property, PropertyImage, Room, VisitRequ
 
 class UserSerializer(serializers.ModelSerializer):
     is_owner_approved = serializers.SerializerMethodField()
+    is_admin = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'display_name', 'role', 'avatar', 'is_owner_approved']
+        fields = ['id', 'username', 'email', 'display_name', 'role', 'avatar', 'is_owner_approved', 'is_staff', 'is_superuser', 'is_admin']
 
     def get_is_owner_approved(self, obj):
         if obj.role == 'OWNER':
             profile = getattr(obj, 'owner_profile', None)
             return profile.is_approved if profile else False
         return False
+
+    def get_is_admin(self, obj):
+        return bool(obj.is_staff or obj.is_superuser or obj.role == 'ADMIN')
 
 class OwnerProfileSerializer(serializers.ModelSerializer):
     class Meta:

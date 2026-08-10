@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api';
-import { Plus, Edit2, Trash2, Home, Users, MapPin, DoorOpen, Eye, Building2, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { Plus, Edit2, Trash2, Home, Users, MapPin, DoorOpen, Eye, Building2, ShieldCheck, Shield, User } from 'lucide-react';
 
 export default function Properties() {
+  const { user } = useAuth();
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -50,10 +52,20 @@ export default function Properties() {
         <div>
           <div className="flex items-center space-x-2.5">
             <Building2 size={24} className="text-amber-700" />
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">Host Property Control Panel</h1>
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">
+              {user?.isAdmin ? 'Admin Systemwide Property Control' : 'Host Property Control Panel'}
+            </h1>
+            {user?.isAdmin && (
+              <span className="px-3 py-1 bg-red-100 text-red-800 text-xs font-extrabold rounded-full flex items-center gap-1 border border-red-200 shadow-2xs">
+                <Shield size={12} />
+                Admin Privileges
+              </span>
+            )}
           </div>
           <p className="text-xs font-semibold text-slate-400 mt-1">
-            Manage room options, live bed vacancies, monthly rents, and property details
+            {user?.isAdmin 
+              ? 'Full administrative control to edit, verify, deactivate, manage rooms, or delete any listing systemwide.' 
+              : 'Manage room options, live bed vacancies, monthly rents, and property details'}
           </p>
         </div>
 
@@ -103,24 +115,24 @@ export default function Properties() {
 
       {loading ? (
         <div className="text-center py-20 text-slate-400 font-bold text-xs bg-white rounded-3xl border border-slate-100">
-          Loading your properties...
+          Loading properties...
         </div>
       ) : properties.length === 0 ? (
         <div className="text-center py-24 bg-white rounded-3xl border border-dashed border-slate-200 text-slate-400 font-semibold space-y-3">
           <Building2 size={40} className="mx-auto text-slate-300" />
-          <p className="text-sm font-bold text-slate-700">You haven't listed any properties yet.</p>
+          <p className="text-sm font-bold text-slate-700">No properties found.</p>
           <Link
             to="/properties/new"
             className="inline-flex items-center space-x-2 px-5 py-2.5 bg-amber-700 text-white rounded-xl text-xs font-black shadow-sm"
           >
             <Plus size={16} />
-            <span>Add Your First Property</span>
+            <span>Add Property</span>
           </Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {properties.map((prop) => {
-            const { id, name, property_type, gender, locality, city, base_rent, deposit, images, rooms, is_verified } = prop;
+            const { id, name, property_type, gender, locality, city, base_rent, deposit, images, rooms, is_verified, is_active, owner_name } = prop;
             const coverImage = images && images.length > 0 ? images[0].image : 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=500&q=80';
             
             const isApartment = property_type === 'Apartment';
@@ -150,7 +162,12 @@ export default function Properties() {
                       </span>
                     ) : (
                       <span className="px-3 py-1 text-[11px] font-black rounded-full bg-amber-500 text-white shadow-2xs">
-                        Listed
+                        Unverified
+                      </span>
+                    )}
+                    {!is_active && (
+                      <span className="px-3 py-1 text-[11px] font-black rounded-full bg-rose-600 text-white shadow-2xs">
+                        Deactivated
                       </span>
                     )}
                   </div>
@@ -163,7 +180,15 @@ export default function Properties() {
                 {/* Card Content Body */}
                 <div className="p-5 space-y-4">
                   <div>
-                    <h3 className="font-black text-slate-900 text-xl leading-snug">{name}</h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-black text-slate-900 text-xl leading-snug">{name}</h3>
+                      {user?.isAdmin && owner_name && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md border border-slate-200 flex items-center gap-1">
+                          <User size={10} />
+                          {owner_name}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center text-xs font-semibold text-slate-400 mt-1">
                       <MapPin size={12} className="mr-1 text-slate-400" />
                       <span>{locality}, {city}</span>

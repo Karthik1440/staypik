@@ -69,12 +69,14 @@ def get_tokens_for_user(user):
 
 class IsApprovedOwner(BasePermission):
     """
-    Allows access only to approved owners.
+    Allows access to approved owners and admin staff.
     If REQUIRE_OWNER_APPROVAL settings option is False, any OWNER is allowed.
     """
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False
+        if request.user.is_staff or request.user.is_superuser or request.user.role == 'ADMIN':
+            return True
         if request.user.role != 'OWNER':
             return False
         if getattr(settings, 'REQUIRE_OWNER_APPROVAL', True):
@@ -293,7 +295,10 @@ class PropertyListView(APIView):
         owner_only = request.query_params.get('owner') == 'true'
 
         if owner_only and request.user.is_authenticated:
-            properties = Property.objects.filter(owner=request.user).prefetch_related('images', 'rooms')
+            if request.user.is_staff or request.user.is_superuser or request.user.role == 'ADMIN':
+                properties = Property.objects.all().prefetch_related('images', 'rooms')
+            else:
+                properties = Property.objects.filter(owner=request.user).prefetch_related('images', 'rooms')
         else:
             properties = Property.objects.filter(is_active=True).prefetch_related('images', 'rooms')
 
@@ -345,15 +350,16 @@ class PropertyDetailView(APIView):
 
 class PropertyManagementView(APIView):
     """
-    POST: Add property (Owner only).
-    PUT/DELETE: Update or delete owner's properties.
+    POST: Add property (Owner or Admin).
+    PUT/DELETE: Update or delete owner's properties or any property by Admin.
     """
     permission_classes = [IsApprovedOwner]
     parser_classes = (MultiPartParser, FormParser, JSONParser)
 
     def post(self, request):
-        if request.user.role != 'OWNER':
-            return Response({'detail': 'Only owners can list properties'}, status=status.HTTP_403_FORBIDDEN)
+        is_admin = bool(request.user.is_staff or request.user.is_superuser or request.user.role == 'ADMIN')
+        if request.user.role != 'OWNER' and not is_admin:
+            return Response({'detail': 'Only owners or admins can list properties'}, status=status.HTTP_403_FORBIDDEN)
 
         name = request.data.get('name')
         property_type = request.data.get('property_type')
@@ -414,7 +420,11 @@ class PropertyManagementView(APIView):
         return Response(PropertySerializer(prop).data, status=status.HTTP_201_CREATED)
 
     def put(self, request, pk):
-        prop = get_object_or_404(Property, id=pk, owner=request.user)
+        is_admin = bool(request.user.is_staff or request.user.is_superuser or request.user.role == 'ADMIN')
+        if is_admin:
+            prop = get_object_or_404(Property, id=pk)
+        else:
+            prop = get_object_or_404(Property, id=pk, owner=request.user)
         
         name = request.data.get('name')
         if name: prop.name = name
@@ -470,6 +480,27 @@ class PropertyManagementView(APIView):
                 except ValueError:
                     pass
 
+        is_active = request.data.get('is_active')
+        if is_active is not None:
+            if isinstance(is_active, str):
+                prop.is_active = is_active.lower() == 'true'
+            else:
+                prop.is_active = bool(is_active)
+
+        is_verified = request.data.get('is_verified')
+        if is_verified is not None:
+            if isinstance(is_verified, str):
+                prop.is_verified = is_verified.lower() == 'true'
+            else:
+                prop.is_verified = bool(is_verified)
+
+        is_featured = request.data.get('is_featured')
+        if is_featured is not None:
+            if isinstance(is_featured, str):
+                prop.is_featured = is_featured.lower() == 'true'
+            else:
+                prop.is_featured = bool(is_featured)
+
         prop.save()
 
         # Handle image uploads
@@ -480,27 +511,36 @@ class PropertyManagementView(APIView):
         return Response(PropertySerializer(prop).data)
 
     def delete(self, request, pk):
-        prop = get_object_or_404(Property, id=pk, owner=request.user)
+        is_admin = bool(request.user.is_staff or request.user.is_superuser or request.user.role == 'ADMIN')
+        if is_admin:
+            prop = get_object_or_404(Property, id=pk)
+        else:
+            prop = get_object_or_404(Property, id=pk, owner=request.user)
         prop.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class DeletePropertyImageView(APIView):
-    """DELETE: Owner deletes a property image"""
+    """DELETE: Owner or Admin deletes a property image"""
     permission_classes = [IsApprovedOwner]
 
     def delete(self, request, pk):
         image = get_object_or_404(PropertyImage, id=pk)
-        if image.property.owner != request.user:
+        is_admin = bool(request.user.is_staff or request.user.is_superuser or request.user.role == 'ADMIN')
+        if image.property.owner != request.user and not is_admin:
             return Response({'detail': 'You do not have permission to delete this image.'}, status=status.HTTP_403_FORBIDDEN)
         image.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class RoomManagementView(APIView):
-    """POST: Owner adds room table metrics directly to property. PUT/DELETE: Edit or delete rooms."""
+    """POST: Owner or Admin adds room table metrics directly to property. PUT/DELETE: Edit or delete rooms."""
     permission_classes = [IsApprovedOwner]
 
     def post(self, request, property_id):
-        prop = get_object_or_404(Property, id=property_id, owner=request.user)
+        is_admin = bool(request.user.is_staff or request.user.is_superuser or request.user.role == 'ADMIN')
+        if is_admin:
+            prop = get_object_or_404(Property, id=property_id)
+        else:
+            prop = get_object_or_404(Property, id=property_id, owner=request.user)
         
         floor = int(request.data.get('floor', 1))
         room_number = request.data.get('room_number')
@@ -538,7 +578,11 @@ class RoomManagementView(APIView):
         return Response(RoomSerializer(room).data, status=status.HTTP_201_CREATED)
 
     def put(self, request, property_id, pk):
-        prop = get_object_or_404(Property, id=property_id, owner=request.user)
+        is_admin = bool(request.user.is_staff or request.user.is_superuser or request.user.role == 'ADMIN')
+        if is_admin:
+            prop = get_object_or_404(Property, id=property_id)
+        else:
+            prop = get_object_or_404(Property, id=property_id, owner=request.user)
         room = get_object_or_404(Room, id=pk, property=prop)
         
         floor = request.data.get('floor')
@@ -575,7 +619,11 @@ class RoomManagementView(APIView):
         return Response(RoomSerializer(room).data)
 
     def delete(self, request, property_id, pk):
-        prop = get_object_or_404(Property, id=property_id, owner=request.user)
+        is_admin = bool(request.user.is_staff or request.user.is_superuser or request.user.role == 'ADMIN')
+        if is_admin:
+            prop = get_object_or_404(Property, id=property_id)
+        else:
+            prop = get_object_or_404(Property, id=property_id, owner=request.user)
         room = get_object_or_404(Room, id=pk, property=prop)
         room.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -583,12 +631,16 @@ class RoomManagementView(APIView):
 
 class RoomConfiguratorView(APIView):
     """
-    GET: Retrieve structured floor -> room -> bed hierarchy for an owner's property.
+    GET: Retrieve structured floor -> room -> bed hierarchy for an owner's or admin's property.
     """
     permission_classes = [IsApprovedOwner]
 
     def get(self, request, property_id):
-        prop = get_object_or_404(Property, id=property_id, owner=request.user)
+        is_admin = bool(request.user.is_staff or request.user.is_superuser or request.user.role == 'ADMIN')
+        if is_admin:
+            prop = get_object_or_404(Property, id=property_id)
+        else:
+            prop = get_object_or_404(Property, id=property_id, owner=request.user)
         rooms = Room.objects.filter(property=prop).order_by('floor', 'room_number')
         tenants = Tenant.objects.filter(property=prop, is_active=True)
 

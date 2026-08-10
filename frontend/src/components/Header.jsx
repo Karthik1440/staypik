@@ -82,20 +82,20 @@ export default function Header() {
                 <Link to="/" className="flex items-center space-x-2">
                   <span className="text-2xl font-black tracking-tight text-amber-700">Stay<span className="text-slate-800">pik</span></span>
                 </Link>
-                {role === 'OWNER' && (
+                {(role === 'OWNER' || user?.isAdmin) && (
                   <span className="ml-3 px-2.5 py-0.5 text-xs font-semibold rounded-full bg-amber-50 text-amber-800 border border-amber-200">
-                    {mode === 'HOST' ? 'Host Mode' : 'Guest Mode'}
+                    {user?.isAdmin ? 'Admin Mode' : (mode === 'HOST' ? 'Host Mode' : 'Guest Mode')}
                   </span>
                 )}
               </div>
 
               {/* Navigation Links */}
               <nav className="hidden md:flex space-x-8 text-sm font-semibold text-slate-600">
-                {mode === 'HOST' ? (
+                {mode === 'HOST' || user?.isAdmin ? (
                   <>
                     <Link to="/properties" className={`flex items-center space-x-1.5 hover:text-amber-700 transition ${location.pathname === '/properties' ? 'text-amber-700 font-extrabold' : ''}`}>
                       <Building size={16} />
-                      <span>My Properties</span>
+                      <span>{user?.isAdmin ? 'All Properties' : 'My Properties'}</span>
                     </Link>
                     <button 
                       onClick={handleRoomVacanciesClick}
