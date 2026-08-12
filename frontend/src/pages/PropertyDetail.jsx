@@ -13,7 +13,7 @@ import {
 export default function PropertyDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, mode } = useAuth();
 
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -212,6 +212,8 @@ export default function PropertyDetail() {
   const {
     name, property_type, gender, address, locality, city, description, base_rent, deposit, amenities, owner_name, owner_phone, images, rooms, is_verified
   } = property;
+
+  const isHostModeOwner = mode === 'HOST' && (user?.isAdmin || user?.role === 'ADMIN' || property?.owner === user?.id);
 
   const filteredRooms = rooms && activeRoomFilter
     ? rooms.filter(r => r.room_type === activeRoomFilter)
@@ -471,7 +473,7 @@ export default function PropertyDetail() {
           </button>
           
           <div className="flex space-x-2 items-center">
-            {(user?.isAdmin || user?.role === 'ADMIN' || property?.owner === user?.id) && (
+            {isHostModeOwner && (
               <button 
                 onClick={() => navigate(`/properties/edit/${id}`)}
                 className="px-3 py-2 rounded-full bg-amber-700 backdrop-blur-sm text-white text-xs font-black flex items-center justify-center hover:bg-amber-800 transition active:scale-90 shadow-md"
@@ -582,6 +584,19 @@ export default function PropertyDetail() {
                   <Star size={14} className="fill-amber-500 text-amber-500 mr-1" />
                   <span>4.6 <span className="text-slate-400 font-semibold">(128 reviews)</span></span>
                 </div>
+              </div>
+
+              {/* Live Host Updated Availability Badge for Guests */}
+              <div className="flex items-center space-x-2 bg-emerald-50 border border-emerald-200/80 p-2.5 px-3.5 rounded-2xl text-xs font-black text-emerald-900 shadow-2xs self-start w-fit mt-2">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600"></span>
+                </span>
+                <span>
+                  {getVacantBeds(property) > 0 
+                    ? `Live Vacancy: ${getVacantBeds(property)} ${property_type === 'Apartment' ? 'unit(s)' : 'bed(s)'} available now` 
+                    : 'House Full (No vacancies available currently)'}
+                </span>
               </div>
             </div>
 
@@ -728,9 +743,9 @@ export default function PropertyDetail() {
                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">
                   {property_type === 'Apartment' ? 'Apartment Types & Vacancy' : 'Available Sharing & Room Types'}
                 </h3>
-                {(user?.isAdmin || user?.role === 'ADMIN' || property?.owner === user?.id) && (
+                {isHostModeOwner && (
                   <button
-                    onClick={() => navigate(`/properties/${id}/rooms`)}
+                    onClick={() => navigate(`/properties/edit/${id}`)}
                     className="text-xs font-black text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-3 py-1.5 rounded-xl transition flex items-center space-x-1"
                   >
                     <DoorOpen size={14} />
@@ -785,7 +800,7 @@ export default function PropertyDetail() {
                         </div>
 
                         <div className="flex items-center space-x-3">
-                          {(user?.isAdmin || user?.role === 'ADMIN' || property?.owner === user?.id) && (
+                          {isHostModeOwner && (
                             <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl border border-slate-200" onClick={(e) => e.stopPropagation()}>
                               <button
                                 onClick={(e) => handleQuickVacantChange(room, -1, e)}

@@ -31,7 +31,7 @@ class PropertyImageSerializer(serializers.ModelSerializer):
 class RoomSerializer(serializers.ModelSerializer):
     class Meta:
         model = Room
-        fields = ['id', 'floor', 'room_number', 'room_type', 'total_beds', 'occupied_beds', 'monthly_rent', 'deposit', 'furnishing', 'bathroom', 'balcony']
+        fields = ['id', 'floor', 'room_number', 'room_type', 'total_beds', 'occupied_beds', 'monthly_rent', 'deposit', 'furnishing', 'bathroom', 'balcony', 'updated_at']
 
 import math
 
@@ -94,16 +94,26 @@ class VisitRequestSerializer(serializers.ModelSerializer):
     user_email = serializers.ReadOnlyField(source='user.email')
     room_number = serializers.ReadOnlyField(source='room.room_number')
     room_type = serializers.ReadOnlyField(source='room.room_type')
+    owner_name = serializers.ReadOnlyField(source='property.owner.display_name')
+    owner_phone = serializers.SerializerMethodField()
 
     class Meta:
         model = VisitRequest
         fields = [
             'id', 'user', 'user_email', 'property', 'property_name', 
             'property_locality', 'property_city', 'property_address', 'property_latitude', 'property_longitude',
-            'property_type', 'room', 'room_number', 'room_type',
+            'property_type', 'room', 'room_number', 'room_type', 'owner_name', 'owner_phone',
             'visit_date', 'visit_time', 'phone', 'notes', 'status', 'created_at'
         ]
         read_only_fields = ['user', 'status']
+
+    def get_owner_phone(self, obj):
+        if not obj.property or not obj.property.owner:
+            return ""
+        profile = getattr(obj.property.owner, 'owner_profile', None)
+        if profile and profile.mobile_number:
+            return profile.mobile_number
+        return getattr(obj.property.owner, 'phone', '') or ''
 
 class TenantSerializer(serializers.ModelSerializer):
     property_name = serializers.ReadOnlyField(source='property.name')

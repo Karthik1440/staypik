@@ -202,6 +202,7 @@ export default function Home() {
       const total = r.total_beds || 1;
       const occupied = r.occupied_beds || 0;
       const vacant = Math.max(0, total - occupied);
+      if (vacant <= 0) return;
       if (!map[type]) {
         map[type] = { type, vacant, total };
       } else {
@@ -672,35 +673,32 @@ export default function Home() {
                           ))}
                         </div>
 
-                        {/* Room-type Vacant Beds Breakdown */}
-                        {getRoomTypeVacancies(p).length > 0 && (
-                          <div className="flex flex-wrap gap-1.5 pt-2">
-                            {getRoomTypeVacancies(p).map(rt => (
-                              <span 
-                                key={rt.type}
-                                className={`px-2 py-0.5 text-[10px] font-extrabold rounded-md border ${
-                                  rt.vacant > 0 
-                                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
-                                    : 'bg-slate-50 text-slate-400 border-slate-200 line-through'
-                                }`}
-                              >
-                                {rt.type}: {rt.vacant > 0 ? `${rt.vacant} ${p.property_type === 'Apartment' ? 'unit' : 'bed'}${rt.vacant > 1 ? 's' : ''}` : 'Full'}
-                              </span>
-                            ))}
-                          </div>
-                        )}
+                        {/* Single line vacant beds summary */}
+                        <div className="pt-1.5 min-h-[28px]">
+                          <span className={`px-2.5 py-1 text-xs font-black rounded-lg border inline-flex items-center space-x-1 ${
+                            getVacantBeds(p) > 0 
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200/80' 
+                              : 'bg-rose-50 text-rose-700 border-rose-200'
+                          }`}>
+                            <span>{getVacantBeds(p) > 0 ? `${getVacantBeds(p)} Available ${p.property_type === 'Apartment' ? 'Units' : 'Beds'}` : 'Fully Booked'}</span>
+                          </span>
+                        </div>
                       </div>
 
-                      <div>
+                      <div className="mt-auto">
                         <div className="flex items-center justify-between pt-3 border-t border-slate-50">
                           <div>
                             <div className="flex items-baseline">
                               <span className="text-base font-black text-amber-700">₹{Number(p.base_rent).toLocaleString()}</span>
                               <span className="text-xs font-semibold text-slate-400 ml-0.5">/month</span>
                             </div>
-                            {p.deposit > 0 && (
+                            {p.deposit > 0 ? (
                               <div className="text-[9px] font-bold text-slate-400 text-left mt-0.5">
                                 Deposit: ₹{Number(p.deposit).toLocaleString()}
+                              </div>
+                            ) : (
+                              <div className="text-[9px] font-bold text-transparent text-left mt-0.5">
+                                Deposit: ₹0
                               </div>
                             )}
                           </div>
@@ -805,34 +803,32 @@ export default function Home() {
                               ))}
                             </div>
 
-                            {/* Room-type Vacant Beds Breakdown */}
-                            {getRoomTypeVacancies(p).length > 0 && (
-                              <div className="flex flex-wrap gap-1.5 pt-2">
-                                {getRoomTypeVacancies(p).map(rt => (
-                                  <span 
-                                    key={rt.type}
-                                    className={`px-2 py-0.5 text-[10px] font-extrabold rounded-md border ${
-                                      rt.vacant > 0 
-                                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
-                                        : 'bg-slate-50 text-slate-400 border-slate-200 line-through'
-                                    }`}
-                                  >
-                                    {rt.type}: {rt.vacant > 0 ? `${rt.vacant} ${p.property_type === 'Apartment' ? 'unit' : 'bed'}${rt.vacant > 1 ? 's' : ''}` : 'Full'}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
+                            {/* Single line vacant beds summary */}
+                            <div className="pt-1.5 min-h-[28px]">
+                              <span className={`px-2.5 py-1 text-xs font-black rounded-lg border inline-flex items-center space-x-1 ${
+                                getVacantBeds(p) > 0 
+                                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200/80' 
+                                  : 'bg-rose-50 text-rose-700 border-rose-200'
+                              }`}>
+                                <span>{getVacantBeds(p) > 0 ? `${getVacantBeds(p)} Available ${p.property_type === 'Apartment' ? 'Units' : 'Beds'}` : 'Fully Booked'}</span>
+                              </span>
+                            </div>
                           </div>
-                          <div>
+
+                          <div className="mt-auto">
                             <div className="pt-2 border-t border-slate-50 flex items-center justify-between">
                               <div className="text-left">
                                 <div className="flex items-baseline">
                                   <span className="text-base sm:text-lg font-black text-slate-800">₹{Number(p.base_rent).toLocaleString()}</span>
                                   <span className="text-xs font-semibold text-slate-400 ml-0.5">/month</span>
                                 </div>
-                                {p.deposit > 0 && (
+                                {p.deposit > 0 ? (
                                   <div className="text-[10px] font-bold text-slate-400 mt-0.5">
                                     Deposit: ₹{Number(p.deposit).toLocaleString()}
+                                  </div>
+                                ) : (
+                                  <div className="text-[10px] font-bold text-transparent mt-0.5">
+                                    Deposit: ₹0
                                   </div>
                                 )}
                               </div>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Edit2, Trash2, Home, Users, MapPin, DoorOpen, Eye, Building2, ShieldCheck, Shield, User } from 'lucide-react';
+import { Plus, Minus, Edit2, Trash2, Home, Users, MapPin, DoorOpen, Eye, Building2, ShieldCheck, Shield, User } from 'lucide-react';
 
 export default function Properties() {
   const { user } = useAuth();
@@ -25,15 +25,45 @@ export default function Properties() {
     }
   };
 
-  const handleDelete = async (id, name) => {
-    if (window.confirm(`Are you sure you want to permanently delete "${name}"?`)) {
-      try {
-        await api.delete(`/rentals/properties/manage/${id}/`);
-        setProperties(properties.filter(p => p.id !== id));
-      } catch (err) {
-        console.error(err);
-        alert("Failed to delete property listing. Verify permissions.");
+  const formatLastUpdated = (dateStr) => {
+    if (!dateStr) return 'Today, ' + new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    try {
+      const d = new Date(dateStr);
+      const now = new Date();
+      const isToday = d.toDateString() === now.toDateString();
+      const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+      if (isToday) {
+        return `Today, ${timeStr}`;
       }
+      return `${d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}, ${timeStr}`;
+    } catch (e) {
+      return 'Recently';
+    }
+  };
+
+  const handleQuickVacantChange = async (propertyId, room, delta) => {
+    const currentVacant = Math.max(0, (room.total_beds || 1) - (room.occupied_beds || 0));
+    const newVacant = Math.max(0, currentVacant + delta);
+    const updatedTotalBeds = Math.max(newVacant, room.total_beds || 1);
+    const newOccupied = Math.max(0, updatedTotalBeds - newVacant);
+
+    const payload = {
+      ...room,
+      total_beds: updatedTotalBeds,
+      occupied_beds: newOccupied
+    };
+
+    try {
+      const res = await api.put(`/rentals/properties/${propertyId}/rooms/${room.id}/`, payload);
+      setProperties(prev => prev.map(p => {
+        if (p.id !== propertyId) return p;
+        return {
+          ...p,
+          rooms: p.rooms ? p.rooms.map(r => r.id === room.id ? res.data : r) : [res.data]
+        };
+      }));
+    } catch (err) {
+      console.error("Failed to update bed vacancy:", err);
     }
   };
 
@@ -70,16 +100,6 @@ export default function Properties() {
         </div>
 
         <div className="flex items-center space-x-2.5">
-          {properties.length > 0 && (
-            <Link
-              to={`/properties/${properties[0].id}/rooms`}
-              className="px-4 py-3 bg-amber-50 border border-amber-200 text-amber-900 hover:bg-amber-100 rounded-2xl text-xs font-black transition flex items-center space-x-2 shadow-2xs"
-            >
-              <DoorOpen size={16} className="text-amber-700" />
-              <span>Room Vacancies & Rents</span>
-            </Link>
-          )}
-
           <Link 
             to="/properties/new" 
             className="px-5 py-3 bg-amber-700 hover:bg-amber-800 text-white text-xs font-black rounded-2xl shadow-md transition flex items-center space-x-1.5"
@@ -92,22 +112,22 @@ export default function Properties() {
 
       {/* Quick Dashboard Stat Cards */}
       {properties.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <div className="bg-white p-4.5 rounded-2xl border border-slate-100 shadow-2xs space-y-1">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Total Listed</span>
-            <p className="text-xl font-black text-slate-800">{totalProperties} {totalProperties === 1 ? 'Property' : 'Properties'}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-white p-5 rounded-2xl border border-amber-100/70 shadow-2xs space-y-1 text-left">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">TOTAL PROPERTIES</span>
+            <p className="text-xl font-black text-slate-900">{totalProperties} {totalProperties === 1 ? 'Property' : 'Properties'}</p>
           </div>
 
-          <div className="bg-white p-4.5 rounded-2xl border border-slate-100 shadow-2xs space-y-1">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Total Live Vacancy</span>
-            <p className="text-xl font-black text-emerald-700">{totalVacantBedsSum} Units/Beds Vacant</p>
+          <div className="bg-white p-5 rounded-2xl border border-amber-100/70 shadow-2xs space-y-1 text-left">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">TOTAL VACANT BEDS</span>
+            <p className="text-xl font-black text-emerald-700">{totalVacantBedsSum} Available Beds</p>
           </div>
 
-          <div className="col-span-2 sm:col-span-1 bg-white p-4.5 rounded-2xl border border-slate-100 shadow-2xs space-y-1">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Listing Status</span>
-            <p className="text-xl font-black text-slate-800 flex items-center space-x-1.5">
+          <div className="bg-white p-5 rounded-2xl border border-amber-100/70 shadow-2xs space-y-1 text-left">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">LISTING STATUS</span>
+            <p className="text-xl font-black text-slate-900 flex items-center space-x-1.5">
               <ShieldCheck size={18} className="text-emerald-600" />
-              <span>Active</span>
+              <span>Active Listing</span>
             </p>
           </div>
         </div>
@@ -130,7 +150,7 @@ export default function Properties() {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-3.5">
           {properties.map((prop) => {
             const { id, name, property_type, gender, locality, city, base_rent, deposit, images, rooms, is_verified, is_active, owner_name } = prop;
             const coverImage = images && images.length > 0 ? images[0].image : 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=500&q=80';
@@ -143,120 +163,78 @@ export default function Properties() {
             return (
               <div 
                 key={id} 
-                className="bg-white rounded-3xl border border-slate-100 shadow-2xs overflow-hidden flex flex-col justify-between hover:shadow-md transition duration-200"
+                className="bg-white rounded-2xl border border-amber-100/80 p-4 shadow-2xs hover:shadow-xs transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-left"
               >
-                {/* Thumbnail Header */}
-                <div className="relative aspect-[16/9] bg-slate-100 overflow-hidden">
-                  <img src={coverImage} alt={name} className="w-full h-full object-cover" />
-                  
-                  <div className="absolute top-3.5 left-3.5 flex flex-wrap gap-1.5 max-w-[85%]">
-                    <span className="px-3 py-1 text-[11px] font-black rounded-full bg-slate-900/85 text-white backdrop-blur-xs shadow-2xs">
-                      {property_type}
-                    </span>
-                    <span className="px-3 py-1 text-[11px] font-black rounded-full bg-amber-50 border border-amber-200 text-amber-800 shadow-2xs">
-                      {gender === 'Unisex' ? 'Co-Ed' : `${gender} Only`}
-                    </span>
-                    {is_verified ? (
-                      <span className="px-3 py-1 text-[11px] font-black rounded-full bg-emerald-600 text-white shadow-2xs">
-                        Verified
-                      </span>
-                    ) : (
-                      <span className="px-3 py-1 text-[11px] font-black rounded-full bg-amber-500 text-white shadow-2xs">
-                        Unverified
-                      </span>
-                    )}
-                    {!is_active && (
-                      <span className="px-3 py-1 text-[11px] font-black rounded-full bg-rose-600 text-white shadow-2xs">
-                        Deactivated
-                      </span>
-                    )}
-                  </div>
+                {/* Left Thumbnail & Info */}
+                <div className="flex items-center space-x-4 w-full sm:w-auto min-w-0">
+                  <img 
+                    src={coverImage} 
+                    alt={name} 
+                    className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border border-slate-200 flex-shrink-0 shadow-2xs bg-amber-50" 
+                  />
 
-                  <div className="absolute bottom-3.5 right-3.5 px-3 py-1 text-xs font-black rounded-xl bg-white/95 text-slate-800 shadow-2xs backdrop-blur-xs border border-slate-200">
-                    {vacantBeds} {isApartment ? 'Units' : 'Beds'} Vacant
-                  </div>
-                </div>
-
-                {/* Card Content Body */}
-                <div className="p-5 space-y-4">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-black text-slate-900 text-xl leading-snug">{name}</h3>
+                  <div className="space-y-1.5 min-w-0 flex-1">
+                    <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                      <h3 className="font-black text-slate-900 text-base sm:text-lg leading-snug truncate pr-1">
+                        {name}
+                      </h3>
+                      <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-slate-900 text-white shadow-2xs">
+                        {property_type}
+                      </span>
+                      <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-amber-50 border border-amber-200 text-amber-900">
+                        {gender === 'Unisex' ? 'Co-Ed' : `${gender} Only`}
+                      </span>
                       {user?.isAdmin && owner_name && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md border border-slate-200 flex items-center gap-1">
+                        <span className="text-[9px] font-bold px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md border border-slate-200 flex items-center gap-1">
                           <User size={10} />
                           {owner_name}
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center text-xs font-semibold text-slate-400 mt-1">
-                      <MapPin size={12} className="mr-1 text-slate-400" />
-                      <span>{locality}, {city}</span>
-                    </div>
-                  </div>
 
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-600 pt-3 border-t border-slate-100">
-                    <div className="flex items-center space-x-3.5">
-                      <span className="flex items-center">
-                        <Home size={14} className="mr-1 text-slate-400" />
-                        {rooms ? rooms.length : 0} Options
+                    <p className="text-xs font-bold text-slate-400 flex items-center">
+                      <MapPin size={13} className="mr-1 text-slate-400 flex-shrink-0" />
+                      <span className="truncate">{locality}, {city}</span>
+                    </p>
+
+                    <div className="flex items-center space-x-3 text-xs font-black pt-0.5">
+                      <span className="text-amber-800 font-black text-sm">
+                        ₹{Number(base_rent).toLocaleString()} <span className="text-[10px] text-slate-400 font-semibold">/mo</span>
                       </span>
-                      <span className="flex items-center">
-                        <Users size={14} className="mr-1 text-slate-400" />
-                        {isApartment ? `${rooms ? rooms.length : 0} Units` : `${totalBeds} Capacity`}
+                      <span className="px-2.5 py-0.5 text-[10px] font-black rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
+                        {vacantBeds} {isApartment ? 'Units' : 'Beds'} Vacant
                       </span>
                     </div>
-
-                    <div className="text-right">
-                      <div className="flex items-baseline justify-end">
-                        <span className="text-base font-black text-amber-700">₹{Number(base_rent).toLocaleString()}</span>
-                        <span className="text-[10px] text-slate-400 ml-0.5">/mo</span>
-                      </div>
-                      {deposit > 0 && (
-                        <span className="text-[9px] font-bold text-slate-400 block -mt-0.5">
-                          Deposit: ₹{Number(deposit).toLocaleString()}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Actions Button Panel */}
-                  <div className="flex flex-wrap gap-2 pt-3 border-t border-slate-100">
-                    <Link 
-                      to={`/properties/${id}/rooms`}
-                      className="flex-1 min-w-[150px] py-2.5 px-3 rounded-xl bg-amber-700 hover:bg-amber-800 text-white text-xs font-black transition flex items-center justify-center space-x-1.5 shadow-2xs"
-                    >
-                      <DoorOpen size={15} />
-                      <span>Manage Rooms & Rents</span>
-                    </Link>
-
-                    <Link 
-                      to={`/properties/edit/${id}`}
-                      className="py-2.5 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-extrabold transition flex items-center justify-center space-x-1"
-                      title="Edit Property Details"
-                    >
-                      <Edit2 size={13} />
-                      <span>Edit</span>
-                    </Link>
-
-                    <Link 
-                      to={`/property/${id}`}
-                      className="py-2.5 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-extrabold transition flex items-center justify-center space-x-1"
-                      title="Preview Guest View"
-                    >
-                      <Eye size={13} />
-                      <span>Preview</span>
-                    </Link>
-
-                    <button 
-                      onClick={() => handleDelete(id, name)}
-                      className="py-2.5 px-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 text-xs font-bold transition flex items-center justify-center"
-                      title="Delete Listing"
-                    >
-                      <Trash2 size={14} />
-                    </button>
                   </div>
                 </div>
+
+                {/* Right Actions */}
+                <div className="flex items-center space-x-2 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 shrink-0">
+                  <Link 
+                    to={`/properties/edit/${id}`}
+                    className="px-4 py-2.5 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-xs font-black shadow-2xs transition flex items-center space-x-1.5"
+                  >
+                    <Edit2 size={14} />
+                    <span>Edit Property</span>
+                  </Link>
+
+                  <Link 
+                    to={`/property/${id}`}
+                    className="p-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center justify-center"
+                    title="Preview Guest View"
+                  >
+                    <Eye size={16} />
+                  </Link>
+
+                  <button 
+                    onClick={() => handleDelete(id, name)}
+                    className="p-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 rounded-xl text-xs font-bold transition flex items-center justify-center"
+                    title="Delete Listing"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+
               </div>
             );
           })}

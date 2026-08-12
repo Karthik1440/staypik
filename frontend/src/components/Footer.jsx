@@ -1,7 +1,10 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { Heart, HelpCircle, Shield, Mail, Phone, MapPin } from 'lucide-react';
 
 export default function Footer() {
+  const { mode } = useAuth();
+  if (mode === 'HOST') return null;
   return (
     <footer className="hidden md:block bg-gradient-to-b from-slate-900 to-slate-950 text-slate-400 border-t border-slate-800">
       {/* Desktop Footer */}

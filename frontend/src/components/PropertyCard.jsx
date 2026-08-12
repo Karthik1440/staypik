@@ -34,6 +34,8 @@ export default function PropertyCard({ property }) {
     }
   };
 
+  const activeVacancies = roomTypeVacancies.filter(rt => rt.vacant > 0);
+
   return (
     <div 
       onClick={() => navigate(`/property/${id}`)}
@@ -58,61 +60,54 @@ export default function PropertyCard({ property }) {
         {vacantBeds === 0 ? (
           <div className="absolute bottom-4 right-4 px-3 py-1 text-xs font-bold rounded-md bg-red-500 text-white shadow-sm flex items-center space-x-1">
             <ShieldAlert size={12} />
-            <span>House Full</span>
+            <span>Fully Booked</span>
           </div>
         ) : (
-          <div className="absolute bottom-4 right-4 px-3 py-1 text-xs font-bold rounded-md bg-emerald-600 text-white shadow-sm">
-            {vacantBeds} {property_type === 'Apartment' ? 'Flats' : 'Beds'} Vacant
+          <div className="absolute bottom-4 right-4 px-3 py-1 text-xs font-black rounded-md bg-white/90 text-slate-800 shadow-sm backdrop-blur-xs">
+            {vacantBeds} {property_type === 'Apartment' ? 'Units' : 'Beds'} Vacant
           </div>
         )}
       </div>
 
-      {/* Body */}
-      <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
+      {/* Details */}
+      <div className="p-4 flex flex-col flex-1 text-left space-y-2">
         <div>
-          <div className="flex items-center text-xs font-semibold text-slate-400 mb-1">
-            <MapPin size={12} className="mr-1" />
-            <span>{locality}, {city}</span>
-          </div>
-          <h3 className="font-extrabold text-slate-800 text-lg leading-snug group-hover:text-amber-700 transition duration-150">
+          <h3 className="font-extrabold text-slate-900 text-lg group-hover:text-amber-700 transition leading-snug">
             {name}
           </h3>
-
-          {/* Room-type vacant beds breakdown */}
-          {roomTypeVacancies.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 pt-2.5">
-              {roomTypeVacancies.map(rt => (
-                <span 
-                  key={rt.type}
-                  className={`px-2 py-0.5 text-[10px] font-extrabold rounded-md border ${
-                    rt.vacant > 0 
-                      ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
-                      : 'bg-slate-50 text-slate-400 border-slate-200 line-through'
-                  }`}
-                >
-                  {rt.type}: {rt.vacant > 0 ? `${rt.vacant} ${property_type === 'Apartment' ? 'unit' : 'bed'}${rt.vacant > 1 ? 's' : ''}` : 'Full'}
-                </span>
-              ))}
-            </div>
-          )}
+          <p className="text-xs font-semibold text-slate-400 flex items-center mt-1">
+            <MapPin size={12} className="mr-1 text-slate-400" />
+            <span>{locality}, {city}</span>
+          </p>
         </div>
 
-        <div className="pt-3 border-t border-slate-50 flex items-center justify-between">
-          <div className="flex items-baseline">
-            <span className="text-xl font-black text-amber-700">₹{Number(base_rent).toLocaleString()}</span>
-            <span className="text-xs font-semibold text-slate-400 ml-1">/mo</span>
-          </div>
+        {/* Single line vacant beds summary */}
+        <div className="pt-1.5 min-h-[28px]">
+          <span className={`px-2.5 py-1 text-xs font-black rounded-lg border inline-flex items-center space-x-1 ${
+            vacantBeds > 0 
+              ? 'bg-emerald-50 text-emerald-800 border-emerald-200/80' 
+              : 'bg-rose-50 text-rose-700 border-rose-200'
+          }`}>
+            <span>{vacantBeds > 0 ? `${vacantBeds} Available ${property_type === 'Apartment' ? 'Units' : 'Beds'}` : 'Fully Booked'}</span>
+          </span>
+        </div>
+      </div>
 
-          <div className="flex items-center space-x-3 text-xs font-bold text-slate-500">
-            <span className="flex items-center">
-              <Home size={14} className="mr-1 text-slate-400" />
-              {rooms ? rooms.length : 0} R
-            </span>
-            <span className="flex items-center">
-              <Users size={14} className="mr-1 text-slate-400" />
-              {totalBeds} Beds
-            </span>
-          </div>
+      <div className="mt-auto pt-3 border-t border-slate-50 flex items-center justify-between p-4">
+        <div className="flex items-baseline">
+          <span className="text-xl font-black text-amber-700">₹{Number(base_rent).toLocaleString()}</span>
+          <span className="text-xs font-semibold text-slate-400 ml-1">/mo</span>
+        </div>
+
+        <div className="flex items-center space-x-3 text-xs font-bold text-slate-500">
+          <span className="flex items-center">
+            <Home size={14} className="mr-1 text-slate-400" />
+            {rooms ? rooms.length : 0} R
+          </span>
+          <span className="flex items-center">
+            <Users size={14} className="mr-1 text-slate-400" />
+            {totalBeds} Beds
+          </span>
         </div>
       </div>
     </div>

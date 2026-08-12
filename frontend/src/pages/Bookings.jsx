@@ -105,10 +105,11 @@ export default function Bookings() {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'APPROVED':
+      case 'PENDING':
         return (
           <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-900 border border-emerald-200">
             <CheckCircle2 size={13} />
-            <span>Approved Visit</span>
+            <span>Visit Confirmed</span>
           </span>
         );
       case 'COMPLETED':
@@ -127,9 +128,9 @@ export default function Bookings() {
         );
       default:
         return (
-          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-black bg-amber-100 text-amber-950 border border-amber-200">
-            <Clock3 size={13} />
-            <span>Pending Host Approval</span>
+          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-900 border border-emerald-200">
+            <CheckCircle2 size={13} />
+            <span>Visit Confirmed</span>
           </span>
         );
     }
@@ -159,11 +160,13 @@ export default function Bookings() {
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Visit Requests</h1>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+            {mode === 'HOST' ? 'Guest Visit Requests' : 'My Visit Bookings'}
+          </h1>
           <p className="text-xs font-semibold text-slate-400 mt-1">
             {mode === 'HOST' 
-              ? 'Review, approve, and manage guest property inspection visit requests' 
-              : 'Keep track of your scheduled property inspection visits and booking status'}
+              ? 'View confirmed guest property visit bookings and connect with guests on WhatsApp' 
+              : 'Keep track of your scheduled property inspection visits and navigate to properties'}
           </p>
         </div>
 
@@ -301,28 +304,22 @@ export default function Bookings() {
                   <div className="flex flex-wrap gap-2 pt-1 md:justify-end">
                     
                     {/* HOST MODE ACTIONS */}
-                    {mode === 'HOST' && visit.status === 'PENDING' && (
+                    {mode === 'HOST' && (visit.status === 'APPROVED' || visit.status === 'PENDING') && (
                       <>
-                        <button
-                          onClick={() => handleUpdateStatus(visit.id, 'APPROVED')}
-                          className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black shadow-xs transition flex items-center space-x-1"
-                        >
-                          <CheckCircle2 size={14} />
-                          <span>Approve Visit</span>
-                        </button>
+                        {visit.phone && (
+                          <a
+                            href={`https://wa.me/${String(visit.phone).replace(/\D/g, '')}?text=${encodeURIComponent(
+                              `Hi, regarding your visit to ${visit.property_name} scheduled on ${formattedVisitDate}${formattedVisitTime ? ' at ' + formattedVisitTime : ''}.`
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-xs transition flex items-center space-x-1.5"
+                          >
+                            <MessageCircle size={14} />
+                            <span>WhatsApp Guest</span>
+                          </a>
+                        )}
 
-                        <button
-                          onClick={() => handleUpdateStatus(visit.id, 'CANCELLED')}
-                          className="px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl text-xs font-black transition flex items-center space-x-1"
-                        >
-                          <XCircle size={14} />
-                          <span>Reject</span>
-                        </button>
-                      </>
-                    )}
-
-                    {mode === 'HOST' && visit.status === 'APPROVED' && (
-                      <>
                         <button
                           onClick={() => handleUpdateStatus(visit.id, 'COMPLETED')}
                           className="px-3.5 py-2 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-xs font-black shadow-xs transition flex items-center space-x-1"
@@ -341,26 +338,37 @@ export default function Bookings() {
                       </>
                     )}
 
-
                     {/* GUEST MODE ACTIONS */}
                     {mode !== 'HOST' && (visit.status === 'PENDING' || visit.status === 'APPROVED') && (
                       <>
-                        {visit.status === 'APPROVED' && (
-                          <button
-                            onClick={() => handleNavigateMap(visit)}
-                            className="px-3.5 py-2 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-xs font-black shadow-xs transition flex items-center space-x-1"
-                            title="Navigate to property on Google Maps"
+                        {(visit.owner_phone || visit.phone) && (
+                          <a
+                            href={`https://wa.me/${String(visit.owner_phone || visit.phone).replace(/\D/g, '')}?text=${encodeURIComponent(
+                              `Hi, I have booked a visit to ${visit.property_name} scheduled on ${formattedVisitDate}${formattedVisitTime ? ' at ' + formattedVisitTime : ''}.`
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-xs transition flex items-center space-x-1.5"
                           >
-                            <Navigation size={13} />
-                            <span>Navigate Map</span>
-                          </button>
+                            <MessageCircle size={14} />
+                            <span>WhatsApp Owner</span>
+                          </a>
                         )}
+
+                        <button
+                          onClick={() => handleNavigateMap(visit)}
+                          className="px-3.5 py-2 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-xs font-black shadow-xs transition flex items-center space-x-1.5"
+                          title="Navigate to property on Google Maps"
+                        >
+                          <Navigation size={13} />
+                          <span>Navigate Map</span>
+                        </button>
 
                         <button
                           onClick={() => handleUpdateStatus(visit.id, 'CANCELLED')}
                           className="px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl text-xs font-black transition"
                         >
-                          Cancel Request
+                          Cancel Visit
                         </button>
                       </>
                     )}

@@ -618,6 +618,9 @@ class RoomManagementView(APIView):
         room.save()
         return Response(RoomSerializer(room).data)
 
+    def patch(self, request, property_id, pk):
+        return self.put(request, property_id, pk)
+
     def delete(self, request, property_id, pk):
         is_admin = bool(request.user.is_staff or request.user.is_superuser or request.user.role == 'ADMIN')
         if is_admin:
@@ -795,22 +798,23 @@ class BookVisitView(APIView):
             visit_date=visit_date,
             visit_time=parsed_time,
             phone=phone,
-            notes=notes
+            notes=notes,
+            status='APPROVED'
         )
 
         # Create user notification targeted to the property owner
         GlobalNotification.objects.create(
             user=prop.owner,
-            title=f"New Visit Request: {prop.name}",
-            message=f"Guest ({request.user.email}) requested a visit to {prop.name} on {visit_date} at {visit_time or 'specified time'}. Contact: {phone}.",
+            title=f"New Confirmed Visit: {prop.name}",
+            message=f"Guest ({request.user.email}) booked a visit to {prop.name} for {visit_date} at {visit_time or 'specified time'}. Contact: {phone}.",
             notification_type='info'
         )
 
         # Create user notification targeted to the guest
         GlobalNotification.objects.create(
             user=request.user,
-            title=f"Visit Scheduled: {prop.name}",
-            message=f"Your visit to {prop.name} has been requested for {visit_date} at {visit_time or 'specified time'}.",
+            title=f"Visit Confirmed: {prop.name}",
+            message=f"Your visit to {prop.name} is confirmed for {visit_date} at {visit_time or 'specified time'}.",
             notification_type='info'
         )
 
@@ -927,6 +931,9 @@ class OwnerDashboardView(APIView):
                 tenant__is_active=True,
                 status__in=['UNPAID', 'OVERDUE']
             ).count()
+            today_date = timezone.now().date()
+            todays_visits_count = VisitRequest.objects.filter(visit_date=today_date).count()
+            todays_enquiries_count = VisitRequest.objects.filter(created_at__date=today_date).count()
         else:
             properties = Property.objects.filter(owner=request.user)
             total_properties = properties.count()
@@ -951,12 +958,21 @@ class OwnerDashboardView(APIView):
                 status__in=['UNPAID', 'OVERDUE']
             ).count()
 
+            today_date = timezone.now().date()
+            todays_visits_count = VisitRequest.objects.filter(property__owner=request.user, visit_date=today_date).count()
+            todays_enquiries_count = VisitRequest.objects.filter(property__owner=request.user, created_at__date=today_date).count()
+
+        occupancy_percentage = round((occupied_beds / total_beds) * 100) if total_beds > 0 else 0
+
         return Response({
             'total_properties': total_properties,
             'total_rooms': total_rooms,
             'total_beds': total_beds,
             'occupied_beds': occupied_beds,
             'vacant_beds': vacant_beds,
+            'occupancy_percentage': occupancy_percentage,
+            'todays_visits_count': todays_visits_count,
+            'todays_enquiries_count': todays_enquiries_count,
             'active_tenants': active_tenants,
             'open_complaints': open_complaints,
             'due_rent_count': due_rent_count

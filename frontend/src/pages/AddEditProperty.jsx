@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
-import { ArrowLeft, Plus, Trash2, Home, CheckCircle2, AlertCircle, Pencil, DoorOpen, Shield } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Home, CheckCircle2, AlertCircle, Pencil, DoorOpen, Shield, ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function AddEditProperty() {
   const { user } = useAuth();
@@ -32,18 +32,44 @@ export default function AddEditProperty() {
   const [isVerified, setIsVerified] = useState(false);
   const [isFeatured, setIsFeatured] = useState(false);
 
-  // Room Form State (For Edit mode only)
-  const [rooms, setRooms] = useState([]);
-  const [roomNumber, setRoomNumber] = useState('');
-  const [roomType, setRoomType] = useState('Single');
-  const [totalBeds, setTotalBeds] = useState(1);
-  const [occupiedBeds, setOccupiedBeds] = useState(0);
-  const [monthlyRent, setMonthlyRent] = useState('');
-  const [roomDeposit, setRoomDeposit] = useState('');
-  const [editingRoomId, setEditingRoomId] = useState(null);
-  const [furnishing, setFurnishing] = useState('Semi-Furnished');
-  const [bathroom, setBathroom] = useState('1');
-  const [balcony, setBalcony] = useState('0');
+  // Room Configurations State (Inline Room & Vacancy Configurator - Accordion Cards)
+  const [roomConfigs, setRoomConfigs] = useState([
+    { id: null, room_type: 'Single Sharing', rent: '7000', total_beds: 4, vacant_beds: 4, deposit: '2000' }
+  ]);
+  const [expandedCardIndices, setExpandedCardIndices] = useState([0]);
+
+  const toggleCardExpand = (index) => {
+    setExpandedCardIndices(prev => 
+      prev.includes(index) 
+        ? prev.filter(i => i !== index) 
+        : [...prev, index]
+    );
+  };
+
+  const handleAddRoomConfig = () => {
+    const defaultType = propertyType === 'Apartment' ? '1 BHK' : 'Double Sharing';
+    const newIndex = roomConfigs.length;
+    setRoomConfigs(prev => [
+      ...prev,
+      { id: null, room_type: defaultType, rent: baseRent || '7000', total_beds: 4, vacant_beds: 4, deposit: deposit || '2000' }
+    ]);
+    setExpandedCardIndices(prev => [...prev, newIndex]);
+  };
+
+  const handleRemoveRoomConfig = (index) => {
+    setRoomConfigs(prev => prev.filter((_, idx) => idx !== index));
+    setExpandedCardIndices(prev => prev.filter(i => i !== index).map(i => i > index ? i - 1 : i));
+  };
+
+  const handleRoomConfigChange = (index, field, value) => {
+    setRoomConfigs(prev => prev.map((cfg, idx) => {
+      if (idx !== index) return cfg;
+      if (field === 'total_beds') {
+        return { ...cfg, total_beds: value, vacant_beds: value };
+      }
+      return { ...cfg, [field]: value };
+    }));
+  };
 
   // Page States
   const [loading, setLoading] = useState(false);
@@ -89,15 +115,22 @@ export default function AddEditProperty() {
       setBaseRent(prop.base_rent);
       setDeposit(prop.deposit || '');
       setSelectedAmenities(prop.amenities || []);
-      setRooms(prop.rooms || []);
       setExistingImages(prop.images || []);
       setLatitude(prop.latitude || '');
       setLongitude(prop.longitude || '');
       setIsActive(prop.is_active ?? true);
       setIsVerified(prop.is_verified ?? false);
       setIsFeatured(prop.is_featured ?? false);
-      if (prop.property_type === 'Apartment') {
-        setRoomType('1 BHK');
+
+      if (prop.rooms && prop.rooms.length > 0) {
+        setRoomConfigs(prop.rooms.map(r => ({
+          id: r.id,
+          room_type: r.room_type || (prop.property_type === 'Apartment' ? '1 BHK' : 'Single Sharing'),
+          rent: String(r.monthly_rent || prop.base_rent || 7000),
+          total_beds: r.total_beds || 1,
+          vacant_beds: Math.max(0, (r.total_beds || 1) - (r.occupied_beds || 0)),
+          deposit: String(r.deposit || prop.deposit || 0)
+        })));
       }
     } catch (e) {
       console.error(e);
@@ -157,8 +190,8 @@ export default function AddEditProperty() {
     formData.append('locality', locality);
     formData.append('city', city);
     formData.append('description', description);
-    formData.append('base_rent', baseRent || 0);
-    formData.append('deposit', deposit || 0);
+    formData.append('base_rent', baseRent || roomConfigs[0]?.rent || 7000);
+    formData.append('deposit', deposit || roomConfigs[0]?.deposit || 0);
     formData.append('amenities', JSON.stringify(selectedAmenities));
     if (latitude) formData.append('latitude', latitude);
     if (longitude) formData.append('longitude', longitude);
@@ -174,23 +207,48 @@ export default function AddEditProperty() {
     }
 
     try {
+      let targetPropId = id;
       if (isEdit) {
         const res = await api.put(`/rentals/properties/manage/${id}/`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
+        targetPropId = res.data.id;
         setExistingImages(res.data.images || []);
         setImageFiles([]);
-        // Reset file input element
         const fileInput = document.getElementById('property-photos-input');
         if (fileInput) fileInput.value = '';
-        
-        setSuccess('Property updated successfully!');
       } else {
         const res = await api.post('/rentals/properties/manage/', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
-        navigate(`/properties/edit/${res.data.id}`);
+        targetPropId = res.data.id;
       }
+
+      // Save room configurations directly
+      if (roomConfigs.length > 0 && targetPropId) {
+        for (const cfg of roomConfigs) {
+          const totBeds = Number(cfg.total_beds || 1);
+          const vacBeds = Math.min(totBeds, Number(cfg.vacant_beds || 0));
+          const occBeds = Math.max(0, totBeds - vacBeds);
+
+          const roomPayload = {
+            room_number: cfg.room_type,
+            room_type: cfg.room_type,
+            total_beds: totBeds,
+            occupied_beds: occBeds,
+            monthly_rent: Number(cfg.rent || baseRent || 7000),
+            deposit: Number(cfg.deposit || deposit || 0)
+          };
+
+          if (cfg.id) {
+            await api.put(`/rentals/properties/${targetPropId}/rooms/${cfg.id}/`, roomPayload);
+          } else {
+            await api.post(`/rentals/properties/${targetPropId}/rooms/`, roomPayload);
+          }
+        }
+      }
+
+      navigate('/properties');
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.detail || "Failed to save property. Verify mandatory inputs.");
@@ -677,49 +735,187 @@ export default function AddEditProperty() {
                 </div>
               </div>
 
+              {/* Room Types & Bed Vacancies (Inline Configurator - Spacious & Responsive) */}
+              <div className="bg-amber-50/40 p-6 rounded-3xl border border-amber-200/70 space-y-5 text-left">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-amber-200/60">
+                  <div>
+                    <h3 className="text-base font-black text-amber-950 tracking-tight flex items-center">
+                      <DoorOpen size={18} className="mr-2 text-amber-700" />
+                      <span>Room Types & Bed Vacancies</span>
+                    </h3>
+                    <p className="text-xs font-semibold text-slate-500 mt-0.5">
+                      Specify room configurations, monthly rent per bed/unit, and available vacancies
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleAddRoomConfig}
+                    className="px-4 py-2.5 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-xs font-black transition shadow-2xs flex items-center space-x-1.5 self-start sm:self-auto shrink-0"
+                  >
+                    <Plus size={15} />
+                    <span>Add Room Option</span>
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {roomConfigs.map((cfg, idx) => {
+                    const isExpanded = expandedCardIndices.includes(idx);
+                    const isApartment = propertyType === 'Apartment';
+
+                    return (
+                      <div 
+                        key={idx} 
+                        className={`bg-white rounded-2xl border transition duration-150 overflow-hidden shadow-2xs ${
+                          isExpanded ? 'border-amber-300 ring-2 ring-amber-100/60' : 'border-slate-200 hover:border-amber-200'
+                        }`}
+                      >
+                        {/* Summary Accordion Header Bar (Clickable) */}
+                        <div 
+                          onClick={() => toggleCardExpand(idx)}
+                          className="p-4 bg-slate-50/70 hover:bg-amber-50/50 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition"
+                        >
+                          <div className="flex items-center space-x-3 flex-wrap gap-y-1">
+                            <span className="text-xs font-black text-amber-900 bg-amber-100/80 px-2.5 py-1 rounded-lg border border-amber-200/80">
+                              Option #{idx + 1}: {cfg.room_type}
+                            </span>
+
+                            <div className="flex items-center space-x-2 text-xs font-bold text-slate-600">
+                              <span>₹{Number(cfg.rent || 0).toLocaleString()}/mo</span>
+                              <span>•</span>
+                              <span>{cfg.total_beds || 1} Total</span>
+                              <span>•</span>
+                              <span className="text-emerald-700 font-extrabold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                {cfg.vacant_beds || 0} Vacant
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center space-x-2 self-end sm:self-auto shrink-0">
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); toggleCardExpand(idx); }}
+                              className="px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:text-amber-800 hover:border-amber-300 rounded-xl text-xs font-bold transition flex items-center space-x-1 shadow-2xs"
+                            >
+                              <span>{isExpanded ? 'Collapse' : 'Expand / Edit'}</span>
+                              {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                            </button>
+
+                            {roomConfigs.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); handleRemoveRoomConfig(idx); }}
+                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-xl border border-red-100 transition"
+                                title="Remove Room Option"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Collapsible Input Fields Body */}
+                        {isExpanded && (
+                          <div className="p-5 border-t border-slate-100 space-y-4 animate-fadeIn">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                              
+                              {/* 1. Room / Sharing Type */}
+                              <div>
+                                <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">
+                                  Room / Flat Type
+                                </label>
+                                <select
+                                  value={cfg.room_type}
+                                  onChange={(e) => handleRoomConfigChange(idx, 'room_type', e.target.value)}
+                                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-black text-slate-800 outline-none focus:border-amber-700 focus:bg-white transition"
+                                >
+                                  {isApartment ? (
+                                    <>
+                                      <option value="1 BHK">1 BHK Flat</option>
+                                      <option value="2 BHK">2 BHK Flat</option>
+                                      <option value="3 BHK">3 BHK Flat</option>
+                                      <option value="1 RK">1 RK Studio</option>
+                                      <option value="Studio Apartment">Studio Apartment</option>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <option value="Single Sharing">Single Sharing</option>
+                                      <option value="Double Sharing">Double Sharing</option>
+                                      <option value="Triple Sharing">Triple Sharing</option>
+                                      <option value="Four Sharing">Four Sharing</option>
+                                      <option value="Private Room">Private Room</option>
+                                    </>
+                                  )}
+                                </select>
+                              </div>
+
+                              {/* 2. Monthly Rent */}
+                              <div>
+                                <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">
+                                  Monthly Rent (₹)
+                                </label>
+                                <input
+                                  type="number"
+                                  required
+                                  placeholder="e.g. 7000"
+                                  value={cfg.rent}
+                                  onChange={(e) => handleRoomConfigChange(idx, 'rent', e.target.value)}
+                                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-black text-slate-800 outline-none focus:border-amber-700 focus:bg-white transition"
+                                />
+                              </div>
+
+                              {/* 3. Total Capacity */}
+                              <div>
+                                <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">
+                                  Total {isApartment ? 'Units' : 'Beds'}
+                                </label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  required
+                                  placeholder="e.g. 4"
+                                  value={cfg.total_beds}
+                                  onChange={(e) => handleRoomConfigChange(idx, 'total_beds', e.target.value)}
+                                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-black text-slate-800 outline-none focus:border-amber-700 focus:bg-white transition"
+                                />
+                              </div>
+
+                              {/* 4. Vacant / Available Count */}
+                              <div>
+                                <label className="block text-xs font-black text-emerald-800 uppercase tracking-wider mb-2">
+                                  Live Vacant {isApartment ? 'Units' : 'Beds'}
+                                </label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  required
+                                  placeholder="e.g. 4"
+                                  value={cfg.vacant_beds}
+                                  onChange={(e) => handleRoomConfigChange(idx, 'vacant_beds', e.target.value)}
+                                  className="w-full p-3 bg-emerald-50/70 border border-emerald-300 rounded-xl text-sm font-black text-emerald-900 outline-none focus:border-emerald-600 focus:bg-white transition"
+                                />
+                              </div>
+
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full sm:w-auto px-6 py-3.5 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition flex items-center justify-center"
+                  className="w-full sm:w-auto px-8 py-3.5 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-sm font-black shadow-md hover:shadow-lg transition flex items-center justify-center"
                 >
-                  {loading ? 'Saving Property...' : (isEdit ? 'Save Property Details' : 'Add Property & Continue')}
+                  {loading ? 'Saving Property...' : (isEdit ? 'Save Property & Vacancies' : 'Save & Publish Property')}
                 </button>
-
-                {isEdit && (
-                  <Link
-                    to={`/properties/${id}/rooms`}
-                    className="w-full sm:w-auto px-5 py-3.5 bg-slate-900 hover:bg-black text-white text-xs font-black rounded-xl shadow-md transition flex items-center justify-center space-x-2"
-                  >
-                    <DoorOpen size={16} />
-                    <span>Configure Room Types</span>
-                  </Link>
-                )}
               </div>
             </form>
           </div>
-
-          {/* Dedicated Room Types Banner for Edit Mode */}
-          {isEdit && (
-            <div className="p-6 bg-gradient-to-r from-amber-50 via-amber-50/80 to-orange-50 rounded-3xl border border-amber-200/80 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 text-left">
-              <div>
-                <h4 className="text-base font-black text-slate-800 flex items-center">
-                  <DoorOpen size={20} className="text-amber-700 mr-2" />
-                  <span>Room Types & Bed Vacancies</span>
-                </h4>
-                <p className="text-xs font-semibold text-slate-500 mt-1">
-                  Manage available room options, monthly rents, deposits, and vacant bed counts on a dedicated page.
-                </p>
-              </div>
-              <Link
-                to={`/properties/${id}/rooms`}
-                className="px-5 py-3 bg-amber-700 hover:bg-amber-800 text-white text-xs font-black rounded-xl shadow-md transition flex items-center space-x-2 flex-shrink-0"
-              >
-                <DoorOpen size={16} />
-                <span>Manage Room Types</span>
-              </Link>
-            </div>
-          )}
         </div>
       </div>
     </div>

@@ -173,34 +173,42 @@ export default function Profile() {
     navigate('/login');
   };
 
+  const isValidAvatar = user?.avatar && 
+    typeof user.avatar === 'string' && 
+    user.avatar.trim() !== '' && 
+    user.avatar !== 'test' &&
+    user.avatar !== 'null' &&
+    user.avatar !== 'undefined' &&
+    (user.avatar.startsWith('http') || user.avatar.startsWith('/') || user.avatar.startsWith('data:'));
+
   return (
     <div className="max-w-xl mx-auto space-y-6 pb-24 animate-fadeIn px-2 sm:px-0">
       
       {/* Top Card: Profile Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-amber-600 to-amber-700 text-white p-6 sm:p-8 rounded-[32px] shadow-lg flex items-center space-x-5 sm:space-x-6">
+      <div className="relative overflow-hidden bg-gradient-to-br from-amber-700 via-amber-800 to-amber-900 text-white p-6 sm:p-8 rounded-[32px] shadow-lg flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6 text-center sm:text-left">
         {/* Background blobs for premium depth */}
-        <div className="absolute right-[-20px] top-[-20px] w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-        <div className="absolute left-[-20px] bottom-[-20px] w-32 h-32 bg-amber-500/20 rounded-full blur-xl pointer-events-none" />
+        <div className="absolute right-[-20px] top-[-20px] w-36 h-36 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute left-[-20px] bottom-[-20px] w-36 h-36 bg-amber-500/20 rounded-full blur-xl pointer-events-none" />
         
         {/* Profile Avatar & Camera button */}
         <div className="relative flex-shrink-0 z-10">
-          {user?.avatar ? (
+          {isValidAvatar ? (
             <img
               src={user.avatar}
               alt={user.displayName || 'User'}
-              className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md transition-transform duration-300 hover:scale-105"
+              className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-4 border-white/90 shadow-md transition-transform duration-300 hover:scale-105"
             />
           ) : (
-            <div className="w-24 h-24 rounded-full bg-amber-800 border-4 border-white flex items-center justify-center text-white text-4xl font-black shadow-md transition-transform duration-300 hover:scale-105">
-              {user?.displayName ? user.displayName.charAt(0).toUpperCase() : 'U'}
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-amber-950/60 border-4 border-white/90 flex items-center justify-center text-white text-3xl sm:text-4xl font-black shadow-md transition-transform duration-300 hover:scale-105">
+              {user?.displayName ? user.displayName.trim().charAt(0).toUpperCase() : (user?.email ? user.email.trim().charAt(0).toUpperCase() : 'U')}
             </div>
           )}
           <button
             onClick={() => fileInputRef.current.click()}
-            className="absolute bottom-0 right-0 w-8 h-8 bg-white text-slate-700 rounded-full flex items-center justify-center shadow-lg hover:bg-slate-50 transition border border-slate-200/50 active:scale-90"
+            className="absolute -bottom-1 -right-1 w-8 h-8 bg-white text-slate-800 rounded-full flex items-center justify-center shadow-md hover:bg-amber-50 transition border border-slate-200/80 active:scale-90"
             title="Upload Profile Photo"
           >
-            <Camera size={14} className="text-slate-600" />
+            <Camera size={15} className="text-amber-800" />
           </button>
           <input
             type="file"
@@ -213,20 +221,20 @@ export default function Profile() {
 
         {/* User Info & Edit Profile Trigger */}
         <div className="space-y-2 z-10 flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-2xl font-black tracking-tight leading-tight truncate w-full">
-              {user?.displayName || user?.email?.split('@')[0] || 'User'}
-            </h3>
-          </div>
+          <h3 className="text-xl sm:text-2xl font-black tracking-tight leading-tight truncate">
+            {user?.displayName || user?.email?.split('@')[0] || 'User'}
+          </h3>
           
-          <p className="text-sm font-semibold text-white/80 leading-normal break-all">{user?.email}</p>
+          <p className="text-xs sm:text-sm font-semibold text-amber-100/90 leading-normal break-all">
+            {user?.email}
+          </p>
           
-          <div className="pt-1">
+          <div className="pt-1.5 flex justify-center sm:justify-start">
             <button
               onClick={() => setShowEditModal(true)}
-              className="inline-flex items-center space-x-1.5 px-4 py-2 bg-white text-amber-900 rounded-full text-xs font-black shadow-md hover:bg-amber-50 hover:shadow-lg transition active:scale-95"
+              className="inline-flex items-center space-x-1.5 px-4 py-2 bg-white text-amber-900 hover:bg-amber-50 rounded-xl text-xs font-black shadow-sm transition active:scale-95"
             >
-              <Camera size={13} className="stroke-[2.5px]" />
+              <Camera size={13} className="stroke-[2.5px] text-amber-800" />
               <span>Edit Profile</span>
             </button>
           </div>
@@ -284,8 +292,8 @@ export default function Profile() {
         </div>
       ) : (
         /* Switch modes or pending approval status for Owners */
-        <div className="bg-[#FFF9F2] border border-[#FFE7CD] p-6 rounded-[28px] shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all duration-300 hover:shadow-md">
-          <div className="space-y-2 max-w-full sm:max-w-[65%]">
+        <div className="bg-[#FFF9F2] border border-[#FFE7CD] p-6 rounded-[28px] shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all duration-300 hover:shadow-md text-left">
+          <div className="space-y-2.5 max-w-full sm:max-w-[65%]">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="text-lg font-black text-slate-800 tracking-tight leading-tight">Host Control Panel</h3>
               {user?.isOwnerApproved ? (
@@ -303,9 +311,10 @@ export default function Profile() {
             {user?.isOwnerApproved ? (
               <button
                 onClick={toggleMode}
-                className="inline-flex items-center space-x-1.5 px-4.5 py-2.5 bg-slate-900 hover:bg-black text-white text-xs font-black rounded-xl shadow-md transition active:scale-95"
+                className="inline-flex items-center space-x-1.5 px-5 py-2.5 bg-amber-700 hover:bg-amber-800 text-white text-xs font-black rounded-xl shadow-md transition active:scale-95 cursor-pointer mt-1"
+                style={{ color: '#ffffff', backgroundColor: '#b45309' }}
               >
-                <span>{mode === 'HOST' ? 'Switch to Guest Mode' : 'Switch to Host Mode'}</span>
+                <span style={{ color: '#ffffff' }}>{mode === 'HOST' ? 'Switch to Guest Mode' : 'Switch to Host Mode'}</span>
               </button>
             ) : (
               <div className="inline-flex items-center space-x-2 text-amber-805 bg-amber-50/50 border border-amber-200/60 px-4 py-2.5 rounded-xl text-xs font-bold">

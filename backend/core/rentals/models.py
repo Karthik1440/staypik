@@ -66,6 +66,7 @@ class Room(models.Model):
     furnishing = models.CharField(max_length=50, blank=True, default='')
     bathroom = models.CharField(max_length=50, blank=True, default='')
     balcony = models.CharField(max_length=50, blank=True, default='')
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"Room {self.room_number} ({self.property.name})"
@@ -79,7 +80,7 @@ class VisitRequest(models.Model):
     visit_time = models.TimeField(null=True, blank=True)
     phone = models.CharField(max_length=20)
     notes = models.TextField(blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='APPROVED')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

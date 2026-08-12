@@ -99,11 +99,11 @@ export default function BookingSuccess() {
         </div>
 
         {/* Action Callout Panel */}
-        <div className="p-4 rounded-2xl bg-amber-50/50 border border-amber-100 flex items-start space-x-3 text-[11px] font-semibold text-amber-800 leading-normal">
-          <ShieldCheck size={16} className="text-amber-700 flex-shrink-0 mt-0.5" />
+        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-start space-x-3 text-[11px] font-semibold text-emerald-800 leading-normal">
+          <ShieldCheck size={16} className="text-emerald-600 flex-shrink-0 mt-0.5" />
           <p>
-            Our team will confirm your visit shortly. <br />
-            You will receive a call from the owner.
+            Your visit is <strong>instantly confirmed</strong>! <br />
+            You can view details anytime on your Bookings navigation page.
           </p>
         </div>
 
@@ -113,12 +113,12 @@ export default function BookingSuccess() {
           
           <div className="space-y-4">
             <div className="flex items-start space-x-3.5">
-              <div className="w-6 h-6 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center font-bold text-xs flex-shrink-0">
+              <div className="w-6 h-6 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-xs flex-shrink-0">
                 1
               </div>
               <div className="text-left space-y-0.5">
-                <p className="text-xs font-extrabold text-slate-800">Owner Confirmation</p>
-                <p className="text-[10px] font-bold text-slate-400">You will get a call from the owner to confirm your visit.</p>
+                <p className="text-xs font-extrabold text-slate-800">Visit Confirmed</p>
+                <p className="text-[10px] font-bold text-slate-400">Your scheduled visit is ready without waiting for host approval.</p>
               </div>
             </div>
 
@@ -128,7 +128,7 @@ export default function BookingSuccess() {
               </div>
               <div className="text-left space-y-0.5">
                 <p className="text-xs font-extrabold text-slate-800">Visit and Explore</p>
-                <p className="text-[10px] font-bold text-slate-400">Visit the PG at the scheduled time and explore the rooms.</p>
+                <p className="text-[10px] font-bold text-slate-400">Visit the property at the scheduled time and inspect the room options.</p>
               </div>
             </div>
 
@@ -137,20 +137,40 @@ export default function BookingSuccess() {
                 3
               </div>
               <div className="text-left space-y-0.5">
-                <p className="text-xs font-extrabold text-slate-800">Confirm Stay</p>
-                <p className="text-[10px] font-bold text-slate-400">If you like the PG, finalize the move-in process directly with the owner.</p>
+                <p className="text-xs font-extrabold text-slate-800">Finalize Stay</p>
+                <p className="text-[10px] font-bold text-slate-400">If satisfied, complete your move-in directly with the owner.</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Footer Actions */}
-        <div className="space-y-3 pt-2">
+        <div className="space-y-2.5 pt-2">
+          {whatsAppLink && (
+            <a 
+              href={whatsAppLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition flex items-center justify-center space-x-2"
+            >
+              <MessageCircle size={15} />
+              <span>WhatsApp Owner</span>
+            </a>
+          )}
+
+          <button 
+            onClick={() => navigate('/bookings')}
+            className="w-full py-3.5 rounded-2xl bg-amber-700 hover:bg-amber-800 text-white text-xs font-black shadow-sm transition flex items-center justify-center space-x-2"
+          >
+            <Calendar size={15} />
+            <span>Go to My Bookings</span>
+          </button>
+
           <button 
             onClick={() => navigate('/')}
-            className="w-full py-4 rounded-2xl bg-amber-900 hover:bg-amber-950 text-white text-xs font-black shadow-md transition flex items-center justify-center space-x-2"
+            className="w-full py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold transition flex items-center justify-center space-x-2"
           >
-            <Home size={15} />
+            <Home size={14} />
             <span>Back to Home</span>
           </button>
         </div>

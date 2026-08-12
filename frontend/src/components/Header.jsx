@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
-import { Home, Compass, User, Calendar, LogOut, Building, Bell, X, Search, Heart, DoorOpen } from 'lucide-react';
+import { Home, Compass, User, Calendar, LogOut, Building, Bell, X, Search, Heart, DoorOpen, LayoutDashboard } from 'lucide-react';
 
 export default function Header() {
   const { user, role, mode, toggleMode, logout } = useAuth();
@@ -19,6 +19,9 @@ export default function Header() {
   } = useNotifications();
   const navigate = useNavigate();
   const [showNotifs, setShowNotifs] = useState(false);
+
+  const isPropertyPage = location.pathname.startsWith('/properties');
+  const isPropertyDetailPage = location.pathname.startsWith('/property/');
 
   const handleRoomVacanciesClick = async (e) => {
     e.preventDefault();
@@ -36,10 +39,7 @@ export default function Header() {
     }
   };
 
-  const isPropertyPage = location.pathname.startsWith('/property/');
-  const isPropertyDetailPage = /^\/property\/[^/]+$/.test(location.pathname);
-
-  if (isPropertyPage && !isPropertyDetailPage) return null;
+  if (mode === 'HOST') return null;
   
   const isActive = (path) => {
     if (path === '/') {
@@ -93,6 +93,10 @@ export default function Header() {
               <nav className="hidden md:flex space-x-8 text-sm font-semibold text-slate-600">
                 {mode === 'HOST' || user?.isAdmin ? (
                   <>
+                    <Link to="/" className={`flex items-center space-x-1.5 hover:text-amber-700 transition ${location.pathname === '/' || location.pathname === '/dashboard' ? 'text-amber-700 font-extrabold' : ''}`}>
+                      <LayoutDashboard size={16} />
+                      <span>Dashboard</span>
+                    </Link>
                     <Link to="/properties" className={`flex items-center space-x-1.5 hover:text-amber-700 transition ${location.pathname === '/properties' ? 'text-amber-700 font-extrabold' : ''}`}>
                       <Building size={16} />
                       <span>{user?.isAdmin ? 'All Properties' : 'My Properties'}</span>
@@ -104,6 +108,10 @@ export default function Header() {
                       <DoorOpen size={16} />
                       <span>Room Vacancies</span>
                     </button>
+                    <Link to="/bookings" className={`flex items-center space-x-1.5 hover:text-amber-700 transition ${location.pathname === '/bookings' ? 'text-amber-700 font-extrabold' : ''}`}>
+                      <Calendar size={16} />
+                      <span>Visit Requests</span>
+                    </Link>
                   </>
                 ) : (
                   <>
@@ -226,6 +234,10 @@ export default function Header() {
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 py-2 z-50 shadow-lg flex justify-around items-center">
           {mode === 'HOST' ? (
             <>
+              <Link to="/" className={`flex flex-col items-center text-xs font-semibold ${location.pathname === '/' || location.pathname === '/dashboard' ? 'text-amber-700 font-extrabold' : 'text-slate-500 hover:text-amber-700'}`}>
+                <LayoutDashboard size={20} />
+                <span className="mt-0.5">Dashboard</span>
+              </Link>
               <Link to="/properties" className={`flex flex-col items-center text-xs font-semibold ${location.pathname === '/properties' ? 'text-amber-700 font-extrabold' : 'text-slate-500 hover:text-amber-700'}`}>
                 <Building size={20} />
                 <span className="mt-0.5">Properties</span>
@@ -237,6 +249,10 @@ export default function Header() {
                 <DoorOpen size={20} />
                 <span className="mt-0.5">Rooms</span>
               </button>
+              <Link to="/bookings" className={`flex flex-col items-center text-xs font-semibold ${location.pathname === '/bookings' ? 'text-amber-700 font-extrabold' : 'text-slate-500 hover:text-amber-700'}`}>
+                <Calendar size={20} />
+                <span className="mt-0.5">Requests</span>
+              </Link>
               <Link to="/profile" className={`flex flex-col items-center text-xs font-semibold ${location.pathname === '/profile' ? 'text-amber-700 font-extrabold' : 'text-slate-500 hover:text-amber-700'}`}>
                 <User size={20} />
                 <span className="mt-0.5">Profile</span>
